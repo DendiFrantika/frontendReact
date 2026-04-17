@@ -2,19 +2,52 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Wraps routes that require authentication; if not logged in, redirect to login
+// PrivateRoute untuk melindungi halaman yang butuh login
 const PrivateRoute = ({ children, role }) => {
-  const { isAuthenticated, user } = useAuth();
 
+  const { isAuthenticated, user, loading } = useAuth();
+
+  // ⭐ Tunggu sampai proses membaca user dari localStorage selesai
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '18px'
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  // Jika belum login → redirect ke login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
+  // Jika butuh role tertentu tapi tidak sesuai
   if (role && user?.role !== role) {
-    // if specific role required and user doesn't have it, redirect home
+
+    // Redirect sesuai role user
+    if (user?.role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    }
+
+    if (user?.role === 'dokter') {
+      return <Navigate to="/dokter" replace />;
+    }
+
+    if (user?.role === 'pasien') {
+      return <Navigate to="/pasien" replace />;
+    }
+
+    // fallback
     return <Navigate to="/" replace />;
   }
 
+  // Jika lolos semua cek
   return children;
 };
 
