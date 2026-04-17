@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 
 export default function Dokter() {
@@ -68,10 +68,7 @@ export default function Dokter() {
   };
 
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Manajemen Dokter</h1>
+    <AdminLayout title="Manajemen Dokter">
         <button className="btn" onClick={() => setShowForm(true)}>
           Tambah Dokter
         </button>
@@ -149,7 +146,6 @@ export default function Dokter() {
             </tbody>
           </table>
         )}
-      </div>
-    </div>
+    </AdminLayout>
   );
 }

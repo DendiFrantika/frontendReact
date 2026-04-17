@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 
 export default function Pasien(){
@@ -23,35 +23,31 @@ export default function Pasien(){
   };
 
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Manajemen Pasien</h1>
-        {loading ? (
-          <p>Memuat pasien...</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Nama</th>
-                <th>Umur</th>
-                <th>Jenis Kelamin</th>
-                <th>Telepon</th>
+    <AdminLayout title="Manajemen Pasien">
+      {loading ? (
+        <p>Memuat pasien...</p>
+      ) : (
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Umur</th>
+              <th>Jenis Kelamin</th>
+              <th>Telepon</th>
+            </tr>
+          </thead>
+          <tbody>
+            {patients.map((p) => (
+              <tr key={p.id}>
+                <td>{p.name}</td>
+                <td>{p.age}</td>
+                <td>{p.gender}</td>
+                <td>{p.phone}</td>
               </tr>
-            </thead>
-            <tbody>
-              {patients.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.name}</td>
-                  <td>{p.age}</td>
-                  <td>{p.gender}</td>
-                  <td>{p.phone}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </AdminLayout>
   );
 }

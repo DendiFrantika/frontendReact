@@ -12,6 +12,25 @@ export default function Login() {
     password: '',
     rememberMe: false
   });
+
+  const getLoginUri = () => process.env.REACT_APP_API_LOGIN_URI || '/login';
+
+  const getRoleFromResponse = (data, userResponse) => {
+    if (data.role) return data.role;
+    if (userResponse?.role) return userResponse.role;
+    if (userResponse?.isAdmin || userResponse?.is_admin) return 'admin';
+    if (userResponse?.isDokter || userResponse?.is_dokter) return 'dokter';
+    if (userResponse?.isPasien || userResponse?.is_pasien) return 'pasien';
+    return null;
+  };
+
+  const normalizeUser = (userResponse, roleFromResponse) => {
+    const baseUser = typeof userResponse === 'object' ? { ...userResponse } : { email: formData.email };
+    return {
+      ...baseUser,
+      role: roleFromResponse || baseUser.role || (baseUser.email?.includes('admin') ? 'admin' : 'pasien')
+    };
+  };
   
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,56 +72,46 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+    setErrors({});
+
     const validationErrors = validateForm();
-    
+
     if (Object.keys(validationErrors).length === 0) {
+      const loginUri = getLoginUri();
       try {
-        // Call backend login endpoint - adjust path if necessary
-        const response = await axiosInstance.post('/auth/login', {
+        const response = await axiosInstance.post(loginUri, {
           email: formData.email,
           password: formData.password
         });
 
         const data = response.data || {};
+        const token = data.token || data.access_token || data.data?.token;
+        const userResponse = data.user || data.data?.user || data;
+        const roleFromResponse = getRoleFromResponse(data, userResponse);
 
-        // Save token and user info (if provided)
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-        }
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-          login(data.user);
+        if (token) {
+          localStorage.setItem('token', token);
         }
 
-        // Determine role and redirect
-        const role = data.user?.role || data.role || (data.isAdmin ? 'admin' : null);
-        if (role === 'admin' || data.user?.isAdmin) {
+        const userToSave = normalizeUser(userResponse, roleFromResponse);
+        login(userToSave, roleFromResponse);
+
+        if (userToSave.role === 'admin') {
           navigate('/admin');
-        } else if (role === 'pasien' || role === 'user') {
-          navigate('/pasien');
+        } else if (userToSave.role === 'dokter') {
+          navigate('/dokter');
         } else {
-          // Fallback to homepage
-          navigate('/');
+          navigate('/pasien');
         }
-
       } catch (error) {
         console.error('Login error:', error);
-        // fallback simulation if backend unreachable
-        const simulatedUser = {
-          nama: 'User Demo',
-          email: formData.email,
-          role: formData.email.includes('admin') ? 'admin' : 'pasien'
-        };
-        localStorage.setItem('user', JSON.stringify(simulatedUser));
-        login(simulatedUser);
-        if (simulatedUser.role === 'admin') navigate('/admin');
-        else navigate('/pasien');
+        const message = error?.response?.data?.message || error?.message || 'Login gagal, silakan cek email/password dan koneksi API.';
+        setErrors({ submit: message });
       }
     } else {
       setErrors(validationErrors);
     }
-    
+
     setIsSubmitting(false);
   };
 

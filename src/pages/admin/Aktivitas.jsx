@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 
 export default function Aktivitas() {
@@ -22,26 +22,20 @@ export default function Aktivitas() {
   }, []);
 
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Aktivitas Admin</h1>
-        {loading ? (
-          <p>Memuat aktivitas...</p>
-        ) : (
-          activities.length > 0 ? (
-            <ul>
-              {activities.map((a, idx) => (
-                <li key={a.id || idx}>
-                  {a.description} &ndash; {new Date(a.timestamp).toLocaleString()}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Tidak ada aktivitas terbaru.</p>
-          )
-        )}
-      </div>
-    </div>
+    <AdminLayout title="Aktivitas Admin">
+      {loading ? (
+        <p>Memuat aktivitas...</p>
+      ) : activities.length > 0 ? (
+        <ul>
+          {activities.map((a, idx) => (
+            <li key={a.id || idx}>
+              {a.description} &ndash; {new Date(a.timestamp).toLocaleString()}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Tidak ada aktivitas terbaru.</p>
+      )}
+    </AdminLayout>
   );
 }

@@ -33,10 +33,11 @@ import Riwayat from '../pages/pasien/Riwayat';
 import Antrian from '../pages/pasien/Antrian';
 
 // Dokter
-import DokterDashboard from '../pages/dokter/Dashboard';
-import RekamMedisDokter from '../pages/dokter/RekamMedis';
-import JadwalDokter from '../pages/dokter/Jadwal';
-import ProfilDokter from '../pages/dokter/Profil';
+import DashboardDokter from '../pages/dokter/page';
+import AntrianDokter from '../pages/dokter/antrian/page';
+import Diagnosis from '../pages/dokter/diagnosis/page';
+import JadwalDokter from '../pages/dokter/jadwal/page';
+import RiwayatDokter from '../pages/dokter/riwayat/page';
 
 const AppRoutes = () => {
   return (
@@ -72,10 +73,11 @@ const AppRoutes = () => {
       <Route path="/pasien/antrian" element={<PrivateRoute role="pasien"><Antrian /></PrivateRoute>} />
 
       {/* Dokter */}
-      <Route path="/dokter" element={<PrivateRoute role="dokter"><DokterDashboard /></PrivateRoute>} />
+      <Route path="/dokter" element={<PrivateRoute role="dokter"><DashboardDokter /></PrivateRoute>} />
+      <Route path="/dokter/antrian" element={<PrivateRoute role="dokter"><AntrianDokter /></PrivateRoute>} />
+      <Route path="/dokter/diagnosis" element={<PrivateRoute role="dokter"><Diagnosis /></PrivateRoute>} />
       <Route path="/dokter/jadwal" element={<PrivateRoute role="dokter"><JadwalDokter /></PrivateRoute>} />
-      <Route path="/dokter/rekam-medis/:id" element={<PrivateRoute role="dokter"><RekamMedisDokter /></PrivateRoute>} />
-      <Route path="/dokter/profil" element={<PrivateRoute role="dokter"><ProfilDokter /></PrivateRoute>} />
+      <Route path="/dokter/riwayat" element={<PrivateRoute role="dokter"><RiwayatDokter /></PrivateRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

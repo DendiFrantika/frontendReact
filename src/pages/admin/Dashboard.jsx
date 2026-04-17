@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 import './Dashboard.css'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie } from 'recharts'; // npm install recharts
@@ -100,9 +100,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <main className="admin-content">
+    <AdminLayout>
         <div className="dashboard-header">
           <h1>Dashboard Admin</h1>
           <p>Selamat datang di dashboard administratif Klinik Medis</p>
@@ -274,8 +272,7 @@ const AdminDashboard = () => {
             </div>
           </>
         )}
-      </main>
-    </div>
+    </AdminLayout>
   );
 };
 

@@ -1,14 +1,10 @@
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 
 export default function RekamMedis(){
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Rekam Medis</h1>
-        {/* TODO: implement medical record management */}
-      </div>
-    </div>
+    <AdminLayout title="Rekam Medis">
+      <p>Halaman untuk mengelola rekam medis pasien.</p>
+    </AdminLayout>
   );
 }

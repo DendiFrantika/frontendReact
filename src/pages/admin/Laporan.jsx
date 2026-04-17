@@ -1,14 +1,10 @@
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 
 export default function Laporan(){
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Laporan</h1>
-        {/* TODO: implement reporting */}
-      </div>
-    </div>
+    <AdminLayout title="Laporan">
+      <p>Halaman untuk melihat dan mencetak laporan klinik.</p>
+    </AdminLayout>
   );
 }

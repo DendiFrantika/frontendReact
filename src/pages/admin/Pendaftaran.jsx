@@ -1,14 +1,10 @@
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 
 export default function Pendaftaran(){
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Pendaftaran</h1>
-        {/* TODO: implement registration management */}
-      </div>
-    </div>
+    <AdminLayout title="Pendaftaran">
+      <p>Halaman manajemen pendaftaran akan ditampilkan di sini.</p>
+    </AdminLayout>
   );
 }

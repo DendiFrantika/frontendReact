@@ -1,14 +1,10 @@
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 
 export default function Pengaturan() {
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Pengaturan Admin</h1>
-        <p>Halaman untuk konfigurasi dan preferensi.</p>
-      </div>
-    </div>
+    <AdminLayout title="Pengaturan Admin">
+      <p>Halaman untuk konfigurasi dan preferensi.</p>
+    </AdminLayout>
   );
 }

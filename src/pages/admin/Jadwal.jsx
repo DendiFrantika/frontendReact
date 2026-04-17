@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
+import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 
 export default function Jadwal(){
@@ -79,64 +79,61 @@ export default function Jadwal(){
   };
 
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-content">
-        <h1>Manajemen Jadwal</h1>
-        <button className="btn" onClick={() => setShowForm(true)}>
-          Tambah Jadwal
-        </button>
+    <AdminLayout title="Manajemen Jadwal">
+      <button className="btn" onClick={() => setShowForm(true)}>
+        Tambah Jadwal
+      </button>
 
-        {showForm && (
-          <form className="form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Dokter</label>
-              <select name="doctorId" value={formData.doctorId} onChange={handleChange} required>
-                <option value="">-- Pilih dokter --</option>
-                {doctors.map((doc) => (
-                  <option key={doc.id} value={doc.id}>{doc.name} ({doc.specialty})</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Hari</label>
-              <input type="text" name="day" value={formData.day} onChange={handleChange} required />
-            </div>
-            <div className="form-group">
-              <label>Mulai (HH:MM)</label>
-              <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required />
-            </div>
-            <div className="form-group">
-              <label>Selesai (HH:MM)</label>
-              <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required />
-            </div>
-            <div className="form-actions">
-              <button type="submit" className="btn primary">
-                {editingId ? 'Perbarui' : 'Simpan'}
-              </button>
-              <button type="button" className="btn" onClick={cancelForm}>
-                Batal
-              </button>
-            </div>
-          </form>
-        )}
+      {showForm && (
+        <form className="form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Dokter</label>
+            <select name="doctorId" value={formData.doctorId} onChange={handleChange} required>
+              <option value="">-- Pilih dokter --</option>
+              {doctors.map((doc) => (
+                <option key={doc.id} value={doc.id}>{doc.name} ({doc.specialty})</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Hari</label>
+            <input type="text" name="day" value={formData.day} onChange={handleChange} required />
+          </div>
+          <div className="form-group">
+            <label>Mulai (HH:MM)</label>
+            <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required />
+          </div>
+          <div className="form-group">
+            <label>Selesai (HH:MM)</label>
+            <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required />
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn primary">
+              {editingId ? 'Perbarui' : 'Simpan'}
+            </button>
+            <button type="button" className="btn" onClick={cancelForm}>
+              Batal
+            </button>
+          </div>
+        </form>
+      )}
 
-        {loading ? (
-          <p>Memuat jadwal...</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Dokter</th>
-                <th>Hari</th>
-                <th>Jam</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedules.map((sch) => {
-                const doc = doctors.find(d => d.id === sch.doctorId) || {};
-                return (
+      {loading ? (
+        <p>Memuat jadwal...</p>
+      ) : (
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Dokter</th>
+              <th>Hari</th>
+              <th>Jam</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map((sch) => {
+              const doc = doctors.find(d => d.id === sch.doctorId) || {};
+              return (
                 <tr key={sch.id}>
                   <td>{doc.name || 'Tidak diketahui'}</td>
                   <td>{sch.day}</td>
@@ -150,12 +147,11 @@ export default function Jadwal(){
                     </button>
                   </td>
                 </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </AdminLayout>
   );
 }
