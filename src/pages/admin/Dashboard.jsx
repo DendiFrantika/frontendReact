@@ -22,6 +22,14 @@ const AdminDashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [timeRange, setTimeRange] = useState('week');
 
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  const [serviceData, setServiceData] = useState([
+    { name: 'Umum', value: 40, fill: COLORS[0] },
+    { name: 'Gigi', value: 25, fill: COLORS[1] },
+    { name: 'Mata', value: 20, fill: COLORS[2] },
+    { name: 'Kulit', value: 15, fill: COLORS[3] },
+  ]);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -32,13 +40,34 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, activitiesRes] = await Promise.all([
-        axiosInstance.get('/admin/stats'),
-        axiosInstance.get('/admin/recent-activities')
-      ]);
+      const statsRes = await axiosInstance.get('/admin/dashboard');
+      const data = statsRes.data;
       
-      setStats(statsRes.data);
-      setRecentActivities(activitiesRes.data);
+      setStats({
+        totalPasien: data.totalPasien || 0,
+        totalDokter: data.totalDokter || 0,
+        totalPendaftaran: data.totalPendaftaran || 0,
+        totalLayanan: data.statistikDokter?.spesialisasi?.length || 4,
+        pendaftaranHariIni: data.pendaftaranHariIni || 0,
+        pasienBaru: data.statistikPasien?.pasienBaruHariIni || 0,
+      });
+
+      if (data.statistikDokter?.spesialisasi?.length > 0) {
+         const mapped = data.statistikDokter.spesialisasi.map((s, i) => ({
+            name: s.spesialisasi || 'Umum',
+            value: parseInt(s.total || 0, 10),
+            fill: COLORS[i % COLORS.length]
+         }));
+         setServiceData(mapped);
+      }
+      
+      try {
+        const activitiesRes = await axiosInstance.get('/admin/recent-activities');
+        setRecentActivities(activitiesRes.data);
+      } catch (e) {
+        console.warn('Recent activities mock used (endpoint maybe missing)');
+      }
+
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -73,14 +102,7 @@ const AdminDashboard = () => {
     { icon: '📈', label: 'Analytics', link: '/admin/analytics' },
   ];
 
-  // Pie chart data for services
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-  const serviceData = [
-    { name: 'Umum', value: 40, fill: COLORS[0] },
-    { name: 'Gigi', value: 25, fill: COLORS[1] },
-    { name: 'Mata', value: 20, fill: COLORS[2] },
-    { name: 'Kulit', value: 15, fill: COLORS[3] },
-  ];
+  // Pie chart data handled via state
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
