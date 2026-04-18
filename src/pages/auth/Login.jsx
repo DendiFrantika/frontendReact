@@ -6,7 +6,7 @@ import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -22,6 +22,14 @@ export default function Login() {
       setErrors({ submit: 'Sesi Anda telah berakhir, silakan login kembali.' });
     }
   }, [location]);
+
+  React.useEffect(() => {
+    if (isAuthenticated && user?.role) {
+      if (user.role === 'admin') navigate('/admin', { replace: true });
+      else if (user.role === 'dokter') navigate('/dokter', { replace: true });
+      else navigate('/pasien', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const [showPassword, setShowPassword] = useState(false); // 👈 TAMBAHAN
   const [errors, setErrors] = useState({});

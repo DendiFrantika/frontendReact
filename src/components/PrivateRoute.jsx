@@ -28,23 +28,17 @@ const PrivateRoute = ({ children, role }) => {
   }
 
   // Jika butuh role tertentu tapi tidak sesuai
-  if (role && user?.role !== role) {
+  if (role) {
+    const roleList = Array.isArray(role) ? role : [role];
+    if (!roleList.includes(user?.role)) {
+      // Redirect sesuai role user
+      if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+      if (user?.role === 'dokter') return <Navigate to="/dokter" replace />;
+      if (user?.role === 'pasien') return <Navigate to="/pasien" replace />;
 
-    // Redirect sesuai role user
-    if (user?.role === 'admin') {
-      return <Navigate to="/admin" replace />;
+      // fallback
+      return <Navigate to="/" replace />;
     }
-
-    if (user?.role === 'dokter') {
-      return <Navigate to="/dokter" replace />;
-    }
-
-    if (user?.role === 'pasien') {
-      return <Navigate to="/pasien" replace />;
-    }
-
-    // fallback
-    return <Navigate to="/" replace />;
   }
 
   // Jika lolos semua cek

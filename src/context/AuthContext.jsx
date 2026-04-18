@@ -31,19 +31,37 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // ⭐ penting
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('user');
+    const initAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
 
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUser(normalizeUserRole(parsed));
+        if (token) {
+          try {
+             // Verifikasi token & ambil data profile terbaru dari backend
+             const res = await authService.getCurrentUser();
+             const userData = res.data || res.user || res;
+             
+             // Keep fallback role if backend somehow fails to provide one but frontend knows it
+             const mappedRole = storedUser ? JSON.parse(storedUser).role : null;
+             const normalized = normalizeUserRole(userData, mappedRole);
+             
+             setUser(normalized);
+             localStorage.setItem('user', JSON.stringify(normalized));
+          } catch (e) {
+             console.warn('Auto login validation failed (token may be expired)', e);
+             if (storedUser) setUser(normalizeUserRole(JSON.parse(storedUser)));
+          }
+        } else if (storedUser) {
+           setUser(normalizeUserRole(JSON.parse(storedUser)));
+        }
+      } catch (err) {
+        console.warn('Failed to parse or load stored user', err);
+      } finally {
+        setLoading(false); // ⭐ selesai loading
       }
-
-    } catch (err) {
-      console.warn('Failed to parse stored user', err);
-    } finally {
-      setLoading(false); // ⭐ selesai loading
-    }
+    };
+    initAuth();
   }, []);
 
   const login = useCallback((userData, fallbackRole) => {
