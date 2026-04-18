@@ -11,29 +11,39 @@ export default function Dashboard(){
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [profileRes, apptRes] = await Promise.all([
-          axiosInstance.get('/pasien/profile'),
-          axiosInstance.get('/pasien/appointments?upcoming=true')
-        ]);
-        setProfile(profileRes.data);
-        setAppointments(apptRes.data);
-      } catch (err) {
-        console.error('Error loading pasien dashboard data', err);
-        // fallback mock data for development/demo
-        setProfile({ name: user?.nama, email: user?.email, phone: user?.phone });
-        setAppointments([
-          { id: 1, date: '2026-03-01', doctorName: 'Dr. A', specialty: 'Umum', time: '10:00' },
-          { id: 2, date: '2026-03-05', doctorName: 'Dr. B', specialty: 'Gigi', time: '14:00' },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    setLoading(true);
+
+    try {
+      const [profileRes, apptRes] = await Promise.all([
+        axiosInstance.get('/pasien/profile'),
+        axiosInstance.get('/pasien/appointments?upcoming=true')
+      ]);
+
+      setProfile(profileRes.data);
+      setAppointments(apptRes.data);
+
+    } catch (err) {
+      console.error('Error loading pasien dashboard data', err);
+
+      // fallback mock data
+      setProfile({
+        name: user?.nama,
+        email: user?.email,
+        phone: user?.phone
+      });
+
+      setAppointments([
+        { id: 1, date: '2026-03-01', doctorName: 'Dr. A', specialty: 'Umum', time: '10:00' },
+        { id: 2, date: '2026-03-05', doctorName: 'Dr. B', specialty: 'Gigi', time: '14:00' },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [user]);
 
   const quickLinks = [
     { icon: '👤', label: 'Profil', to: '/pasien/profil' },

@@ -27,7 +27,7 @@ import Aktivitas from '../pages/admin/Aktivitas';
 
 // Pasien
 import PasienDashboard from '../pages/pasien/Dashboard';
-import Profil from '../pages/pasien/Profil';
+import Profil from '../pages/shared/Profil';
 import DaftarBerobat from '../pages/pasien/DaftarBerobat';
 import Riwayat from '../pages/pasien/Riwayat';
 import Antrian from '../pages/pasien/Antrian';
@@ -74,6 +74,7 @@ const AppRoutes = () => {
 
       {/* Dokter */}
       <Route path="/dokter" element={<PrivateRoute role="dokter"><DashboardDokter /></PrivateRoute>} />
+      <Route path="/dokter/profil" element={<PrivateRoute role="dokter"><Profil /></PrivateRoute>} />
       <Route path="/dokter/antrian" element={<PrivateRoute role="dokter"><AntrianDokter /></PrivateRoute>} />
       <Route path="/dokter/diagnosis" element={<PrivateRoute role="dokter"><Diagnosis /></PrivateRoute>} />
       <Route path="/dokter/jadwal" element={<PrivateRoute role="dokter"><JadwalDokter /></PrivateRoute>} />

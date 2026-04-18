@@ -42,6 +42,21 @@ const authService = {
     }
   },
 
+  updateProfile: async (userData) => {
+    try {
+      const response = await apiService.put('/auth/profile', userData);
+      if (response.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      } else if (response.data) {
+        // Fallback if user object is not wrapped
+        localStorage.setItem('user', JSON.stringify(response.data));
+      }
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   refreshToken: async () => {
     try {
       const response = await apiService.post('/auth/refresh');

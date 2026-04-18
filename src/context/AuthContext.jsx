@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
+import authService from '../services/auth-service';
 
 export const AuthContext = createContext(null);
 
@@ -59,8 +60,13 @@ export const AuthProvider = ({ children }) => {
 
   }, []);
 
-  const logout = useCallback(() => {
-
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch (err) {
+      console.warn('Backend logout failed', err);
+    }
+    
     setUser(null);
 
     try {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import './Login.css';
@@ -14,11 +14,20 @@ export default function Login() {
     rememberMe: false
   });
 
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === 'true') {
+      setErrors({ submit: 'Sesi Anda telah berakhir, silakan login kembali.' });
+    }
+  }, [location]);
+
   const [showPassword, setShowPassword] = useState(false); // 👈 TAMBAHAN
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getLoginUri = () => process.env.REACT_APP_API_LOGIN_URI || '/login';
+  const getLoginUri = () => process.env.REACT_APP_API_LOGIN_URI || '/auth/login';
 
   const getRoleFromResponse = (data, userResponse) => {
     if (data.role) return data.role;

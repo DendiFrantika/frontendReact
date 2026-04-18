@@ -1,24 +1,29 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL ||
+  'http://127.0.0.1:8000/api';
 
 const apiService = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
 });
 
-// Add token to requests
+// Add token
 apiService.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
-// Handle response errors
+// Handle 401
 apiService.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -27,6 +32,7 @@ apiService.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );
