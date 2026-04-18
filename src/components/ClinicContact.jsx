@@ -1,5 +1,11 @@
 import React from 'react';
 
+/** Tautan share Google Maps — buka di aplikasi / browser */
+const CLINIC_GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/msV48DCcYuh6V5Er5';
+/** Embed (tanpa API key): koordinat mengikuti titik di tautan di atas */
+const CLINIC_MAP_EMBED_SRC =
+  'https://www.google.com/maps?q=-0.2246548,100.6318006&hl=id&z=14&output=embed';
+
 export function ClinicContact() {
   return (
     <section id="kontak">
@@ -53,9 +59,37 @@ export function ClinicContact() {
             </div>
           </div>
 
-          {/* Map Placeholder */}
-          <div className="h-full min-h-[400px] bg-gray-200" style={{borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-            <p style={{color: '#9ca3af'}}>🗺️ Peta Lokasi</p>
+          {/* Peta lokasi (Google Maps) */}
+          <div className="h-full min-h-[400px] flex flex-col gap-3">
+            <div
+              className="flex-1 min-h-[320px] bg-gray-200 shadow-lg overflow-hidden"
+              style={{ borderRadius: '1rem' }}
+            >
+              <iframe
+                title="Peta lokasi klinik di Google Maps"
+                src={CLINIC_MAP_EMBED_SRC}
+                width="100%"
+                height="100%"
+                style={{ minHeight: '400px', border: 0, display: 'block' }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+            <a
+              href={CLINIC_GOOGLE_MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: '#0284c7',
+                textAlign: 'center',
+                textDecoration: 'none',
+              }}
+            >
+              Buka di Google Maps →
+            </a>
           </div>
         </div>
       </div>

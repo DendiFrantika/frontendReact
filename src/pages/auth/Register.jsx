@@ -1,8 +1,8 @@
-'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../../api/axios';
+import { getAuthBackgroundImageUrl } from './authEnv';
+import './Login.css';
 import './Register.css';
 
 const Register = () => {
@@ -15,11 +15,27 @@ const Register = () => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [toasts, setToasts] = useState([]);
   const navigate = useNavigate();
+
+  const registerBgUrl = getAuthBackgroundImageUrl();
+  const registerBgStyle = registerBgUrl
+    ? { '--login-bg-image': `url(${JSON.stringify(registerBgUrl)})` }
+    : undefined;
+
+  const pushToast = useCallback((message, variant = 'info') => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4200);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -73,23 +89,24 @@ const Register = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        password_confirmation: formData.confirmPassword, // ✅ Laravel butuh ini
+        password_confirmation: formData.confirmPassword,
       });
 
-      if (response.status === 201) {
-        alert('Registrasi berhasil! Silakan login.');
-        navigate('/login');
+      if (response.status === 201 || response.status === 200) {
+        pushToast('Registrasi berhasil. Silakan masuk.', 'success');
+        window.setTimeout(() => navigate('/login'), 600);
       }
     } catch (err) {
       if (err.response?.data?.errors) {
-        // ✅ Tangkap validation error dari Laravel
         const laravelErrors = {};
         Object.keys(err.response.data.errors).forEach((key) => {
           laravelErrors[key] = err.response.data.errors[key][0];
         });
         setErrors(laravelErrors);
       } else {
-        setErrors({ submit: err.response?.data?.message ?? 'Registrasi gagal. Silakan coba lagi.' });
+        const msg = err.response?.data?.message ?? 'Registrasi gagal. Silakan coba lagi.';
+        setErrors({ submit: msg });
+        pushToast(msg, 'error');
       }
     } finally {
       setLoading(false);
@@ -97,22 +114,54 @@ const Register = () => {
   };
 
   return (
-    <main className="register-container">
-      <div className="register-card">
-        <div className="register-header">
-          <h1 className="register-title">Daftar Akun</h1>
-          <p className="register-subtitle">Buat akun baru di Klinik Medis</p>
+    <main
+      className={`login-container${registerBgUrl ? ' login-container--bg-image' : ''}`}
+    >
+      <div
+        className={`login-bg${registerBgUrl ? ' login-bg--image' : ''}`}
+        style={registerBgStyle}
+        aria-hidden="true"
+      />
+      <div className="login-bg-shapes" aria-hidden="true">
+        <span className="login-shape login-shape--1" />
+        <span className="login-shape login-shape--2" />
+        <span className="login-shape login-shape--3" />
+      </div>
+
+      <div
+        className="login-toast-region"
+        role="region"
+        aria-label="Notifikasi"
+        aria-live="polite"
+      >
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`login-toast login-toast--${t.variant}`}
+            role="status"
+          >
+            {t.message}
+          </div>
+        ))}
+      </div>
+
+      <div className="login-card register-card-shell">
+        <div className="login-header">
+          <h1 className="login-title">Daftar akun</h1>
+          <p className="login-subtitle">Buat akun baru untuk layanan klinik</p>
         </div>
 
         {errors.submit && (
-          <div className="error-submit">{errors.submit}</div>
+          <div className="error-message error-submit" role="alert">
+            {errors.submit}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="register-form" noValidate>
-
-          {/* Nama */}
+        <form onSubmit={handleSubmit} className="login-form register-form-tight" noValidate>
           <div className="form-group">
-            <label htmlFor="name" className="form-label">Nama Lengkap *</label>
+            <label htmlFor="name" className="form-label">
+              Nama lengkap
+            </label>
             <input
               type="text"
               id="name"
@@ -122,13 +171,15 @@ const Register = () => {
               className={`form-input ${errors.name ? 'input-error' : ''}`}
               placeholder="Masukkan nama lengkap"
               disabled={loading}
+              autoComplete="name"
             />
             {errors.name && <span className="error-message">{errors.name}</span>}
           </div>
 
-          {/* Email */}
           <div className="form-group">
-            <label htmlFor="email" className="form-label">Email *</label>
+            <label htmlFor="email" className="form-label">
+              Email
+            </label>
             <input
               type="email"
               id="email"
@@ -138,63 +189,114 @@ const Register = () => {
               className={`form-input ${errors.email ? 'input-error' : ''}`}
               placeholder="nama@email.com"
               disabled={loading}
+              autoComplete="email"
             />
             {errors.email && <span className="error-message">{errors.email}</span>}
           </div>
 
-          {/* Password */}
           <div className="form-group">
-            <label htmlFor="password" className="form-label">Password *</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`form-input ${errors.password ? 'input-error' : ''}`}
-              placeholder="Minimal 6 karakter"
-              disabled={loading}
-            />
-            {errors.password && <span className="error-message">{errors.password}</span>}
+            <label htmlFor="password" className="form-label">
+              Password
+            </label>
+            <div className="login-password-wrap">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`form-input form-input--with-toggle ${errors.password ? 'input-error' : ''}`}
+                placeholder="Minimal 6 karakter"
+                disabled={loading}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="login-password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+                aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+            {errors.password && (
+              <span className="error-message">{errors.password}</span>
+            )}
             <div className="password-requirements">
-              <small>Password harus mengandung:</small>
+              <small>Persyaratan password</small>
               <ul>
-                <li className={formData.password.length >= 6 ? 'valid' : ''}>Minimal 6 karakter</li>
-                <li className={/[a-z]/.test(formData.password) ? 'valid' : ''}>Huruf kecil</li>
-                <li className={/[A-Z]/.test(formData.password) ? 'valid' : ''}>Huruf besar</li>
-                <li className={/\d/.test(formData.password) ? 'valid' : ''}>Angka</li>
+                <li className={formData.password.length >= 6 ? 'valid' : ''}>
+                  Minimal 6 karakter
+                </li>
+                <li className={/[a-z]/.test(formData.password) ? 'valid' : ''}>
+                  Huruf kecil
+                </li>
+                <li className={/[A-Z]/.test(formData.password) ? 'valid' : ''}>
+                  Huruf besar
+                </li>
+                <li className={/\d/.test(formData.password) ? 'valid' : ''}>
+                  Angka
+                </li>
               </ul>
             </div>
           </div>
 
-          {/* Konfirmasi Password */}
           <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">Konfirmasi Password *</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
-              placeholder="Ulangi password"
-              disabled={loading}
-            />
-            {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+            <label htmlFor="confirmPassword" className="form-label">
+              Konfirmasi password
+            </label>
+            <div className="login-password-wrap">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={`form-input form-input--with-toggle ${errors.confirmPassword ? 'input-error' : ''}`}
+                placeholder="Ulangi password"
+                disabled={loading}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="login-password-toggle"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={loading}
+                aria-label={
+                  showConfirmPassword
+                    ? 'Sembunyikan konfirmasi password'
+                    : 'Tampilkan konfirmasi password'
+                }
+              >
+                {showConfirmPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <span className="error-message">{errors.confirmPassword}</span>
+            )}
           </div>
 
-          <button type="submit" className="register-button" disabled={loading}>
-            {loading ? 'Memproses...' : 'Daftar Sekarang'}
+          <button
+            type="submit"
+            className="login-button register-submit"
+            disabled={loading}
+          >
+            {loading ? 'Memproses…' : 'Daftar'}
           </button>
         </form>
 
-        <div className="register-footer">
+        <div className="login-footer register-footer-stack">
           <p>
             Sudah punya akun?{' '}
-            <Link to="/login" className="login-link">Masuk di sini</Link>
+            <Link to="/login" className="register-link">
+              Masuk
+            </Link>
           </p>
-          <p>
-            <Link to="/" className="home-link">← Kembali ke beranda</Link>
+          <p className="register-footer-secondary">
+            <Link to="/" className="auth-back-home">
+              ← Kembali ke beranda
+            </Link>
           </p>
         </div>
       </div>

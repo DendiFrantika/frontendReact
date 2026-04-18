@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import axiosInstance from '../../api/axios';
+import AdminCrudModal from '../../components/AdminCrudModal';
+import {
+  normalizeErrorMessage,
+  normalizeFieldErrors,
+  requestWithFallback,
+  unpackCollection,
+} from '../../services/adminCrudApi';
+import { validateJadwalForm } from '../../services/adminMasterValidation';
 
 export default function Jadwal() {
   const [schedules, setSchedules] = useState([]);
@@ -8,6 +15,12 @@ export default function Jadwal() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [notice, setNotice] = useState('');
 
   // Sesuaikan field dengan validasi Laravel
   const [formData, setFormData] = useState({
@@ -18,6 +31,8 @@ export default function Jadwal() {
     kapasitas: 10 // Default kapasitas
   });
 
+  // inisialisasi data jadwal & dokter saat halaman pertama kali dibuka
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchDoctors();
     fetchSchedules();
@@ -25,9 +40,11 @@ export default function Jadwal() {
 
  const fetchDoctors = async () => {
     try {
-      // Jika di Laravel rutenya /api/dokter
-      const res = await axiosInstance.get('/dokter'); 
-      setDoctors(res.data.data || res.data);
+      const res = await requestWithFallback([
+        { method: 'get', url: '/admin/dokter' },
+        { method: 'get', url: '/dokter' },
+      ]);
+      setDoctors(unpackCollection(res.data));
     } catch (err) {
       console.error('Error fetching doctors:', err);
     }
@@ -35,9 +52,11 @@ export default function Jadwal() {
 
   const fetchSchedules = async () => {
     try {
-      // Jika di Laravel rutenya /api/jadwal
-      const res = await axiosInstance.get('/jadwal'); 
-      setSchedules(res.data.data || []); 
+      const res = await requestWithFallback([
+        { method: 'get', url: '/admin/jadwal' },
+        { method: 'get', url: '/jadwal' },
+      ]);
+      setSchedules(unpackCollection(res.data));
     } catch (err) {
       console.error('Error fetching schedules:', err);
     } finally {
@@ -47,24 +66,48 @@ export default function Jadwal() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: null }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
+    setErrors({});
+    const clientErrors = validateJadwalForm(formData);
+    if (Object.keys(clientErrors).length > 0) {
+      setErrors(clientErrors);
+      return;
+    }
+    const payload = {
+      dokter_id: Number(formData.dokter_id),
+      hari: formData.hari,
+      jam_mulai: formData.jam_mulai,
+      jam_selesai: formData.jam_selesai,
+      kapasitas: Number(formData.kapasitas),
+    };
+    setSubmitLoading(true);
     try {
       if (editingId) {
-        await axiosInstance.put(`/admin/jadwal/${editingId}`, formData);
+        await requestWithFallback([
+          { method: 'put', url: `/admin/jadwal/${editingId}`, data: payload },
+          { method: 'put', url: `/jadwal/${editingId}`, data: payload },
+        ]);
       } else {
-        await axiosInstance.post('/admin/jadwal', formData);
+        await requestWithFallback([
+          { method: 'post', url: '/admin/jadwal', data: payload },
+          { method: 'post', url: '/jadwal', data: payload },
+        ]);
       }
-      fetchSchedules();
+      await fetchSchedules();
       cancelForm();
+      setNotice(editingId ? 'Jadwal berhasil diperbarui.' : 'Jadwal berhasil ditambahkan.');
     } catch (err) {
-      // Menampilkan error validasi dari Laravel
-      if (err.response && err.response.data.errors) {
-        alert(JSON.stringify(err.response.data.errors));
-      }
+      const fieldErrors = normalizeFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) setErrors(fieldErrors);
+      else setSubmitError(normalizeErrorMessage(err, 'Gagal menyimpan jadwal.'));
       console.error('Error saving schedule:', err);
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -73,21 +116,31 @@ export default function Jadwal() {
     setFormData({
       dokter_id: sch.dokter_id,
       hari: sch.hari,
-      jam_mulai: sch.jam_mulai.substring(0, 5), // Potong detik jika ada (HH:mm)
-      jam_selesai: sch.jam_selesai.substring(0, 5),
+      jam_mulai: String(sch.jam_mulai || '').substring(0, 5),
+      jam_selesai: String(sch.jam_selesai || '').substring(0, 5),
       kapasitas: sch.kapasitas
     });
+    setErrors({});
+    setSubmitError('');
     setShowForm(true);
   };
 
-  const deleteSchedule = async (id) => {
-    if (window.confirm('Hapus jadwal ini?')) {
-      try {
-        await axiosInstance.delete(`/admin/jadwal/${id}`);
-        fetchSchedules();
-      } catch (err) {
-        console.error('Error deleting schedule:', err);
-      }
+  const deleteSchedule = async () => {
+    if (!deleteTarget?.id) return;
+    setDeleteLoading(true);
+    try {
+      await requestWithFallback([
+        { method: 'delete', url: `/admin/jadwal/${deleteTarget.id}` },
+        { method: 'delete', url: `/jadwal/${deleteTarget.id}` },
+      ]);
+      await fetchSchedules();
+      setDeleteTarget(null);
+      setNotice('Jadwal berhasil dihapus.');
+    } catch (err) {
+      console.error('Error deleting schedule:', err);
+      setSubmitError('Gagal menghapus jadwal.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -95,14 +148,22 @@ export default function Jadwal() {
     setShowForm(false);
     setEditingId(null);
     setFormData({ dokter_id: '', hari: '', jam_mulai: '', jam_selesai: '', kapasitas: 10 });
+    setErrors({});
+    setSubmitError('');
   };
 
   return (
     <AdminLayout title="Manajemen Jadwal">
       <button className="btn" onClick={() => setShowForm(true)}>Tambah Jadwal</button>
+      {notice ? <p>{notice}</p> : null}
 
-      {showForm && (
+      <AdminCrudModal
+        open={showForm}
+        title={editingId ? 'Edit Jadwal' : 'Tambah Jadwal'}
+        onClose={cancelForm}
+      >
         <form className="form" onSubmit={handleSubmit} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px' }}>
+          {submitError ? <p className="form-error">{submitError}</p> : null}
           <div className="form-group">
             <label>Dokter</label>
             <select name="dokter_id" value={formData.dokter_id} onChange={handleChange} required>
@@ -111,6 +172,7 @@ export default function Jadwal() {
                 <option key={doc.id} value={doc.id}>{doc.nama}</option>
               ))}
             </select>
+            {errors.dokter_id ? <small className="form-error">{errors.dokter_id[0]}</small> : null}
           </div>
           
           <div className="form-group">
@@ -121,29 +183,35 @@ export default function Jadwal() {
                 <option key={h} value={h}>{h}</option>
               ))}
             </select>
+            {errors.hari ? <small className="form-error">{errors.hari[0]}</small> : null}
           </div>
 
           <div className="form-group">
             <label>Mulai</label>
             <input type="time" name="jam_mulai" value={formData.jam_mulai} onChange={handleChange} required />
+            {errors.jam_mulai ? <small className="form-error">{errors.jam_mulai[0]}</small> : null}
           </div>
 
           <div className="form-group">
             <label>Selesai</label>
             <input type="time" name="jam_selesai" value={formData.jam_selesai} onChange={handleChange} required />
+            {errors.jam_selesai ? <small className="form-error">{errors.jam_selesai[0]}</small> : null}
           </div>
 
           <div className="form-group">
             <label>Kapasitas</label>
-            <input type="number" name="kapasitas" value={formData.kapasitas} onChange={handleChange} required min="1" />
+            <input type="number" name="kapasitas" value={formData.kapasitas} onChange={handleChange} required min="1" max="500" />
+            {errors.kapasitas ? <small className="form-error">{errors.kapasitas[0]}</small> : null}
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn primary">{editingId ? 'Perbarui' : 'Simpan'}</button>
-            <button type="button" className="btn" onClick={cancelForm}>Batal</button>
+            <button type="submit" className="btn primary" disabled={submitLoading}>
+              {submitLoading ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
+            </button>
+            <button type="button" className="btn" onClick={cancelForm} disabled={submitLoading}>Batal</button>
           </div>
         </form>
-      )}
+      </AdminCrudModal>
 
       {loading ? (
         <p>Memuat jadwal...</p>
@@ -168,13 +236,32 @@ export default function Jadwal() {
                 <td>{sch.kapasitas}</td>
                 <td>
                   <button className="btn small" onClick={() => editSchedule(sch)}>Edit</button>
-                  <button className="btn small danger" onClick={() => deleteSchedule(sch.id)}>Hapus</button>
+                  <button className="btn small danger" onClick={() => setDeleteTarget(sch)}>Hapus</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+
+      <AdminCrudModal
+        open={Boolean(deleteTarget)}
+        title="Konfirmasi Hapus Jadwal"
+        onClose={() => setDeleteTarget(null)}
+        size="sm"
+      >
+        <p>
+          Hapus jadwal untuk <strong>{deleteTarget?.dokter?.nama || 'dokter ini'}</strong>?
+        </p>
+        <div className="form-actions">
+          <button type="button" className="btn small danger" onClick={deleteSchedule} disabled={deleteLoading}>
+            {deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
+          </button>
+          <button type="button" className="btn" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>
+            Batal
+          </button>
+        </div>
+      </AdminCrudModal>
     </AdminLayout>
   );
 }

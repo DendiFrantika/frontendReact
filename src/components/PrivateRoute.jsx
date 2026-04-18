@@ -27,17 +27,21 @@ const PrivateRoute = ({ children, role }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Jika butuh role tertentu tapi tidak sesuai
+  const userRole = String(user?.role || '').toLowerCase();
+  if (role && !userRole) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Jika butuh role tertentu tapi tidak sesuai (perbandingan case-insensitive)
   if (role) {
     const roleList = Array.isArray(role) ? role : [role];
-    if (!roleList.includes(user?.role)) {
-      // Redirect sesuai role user
-      if (user?.role === 'admin') return <Navigate to="/admin" replace />;
-      if (user?.role === 'dokter') return <Navigate to="/dokter" replace />;
-      if (user?.role === 'pasien') return <Navigate to="/pasien" replace />;
+    const allowed = roleList.map((r) => String(r).toLowerCase());
+    if (!allowed.includes(userRole)) {
+      if (userRole === 'admin') return <Navigate to="/admin" replace />;
+      if (userRole === 'dokter') return <Navigate to="/dokter" replace />;
+      if (userRole === 'pasien') return <Navigate to="/pasien" replace />;
 
-      // fallback
-      return <Navigate to="/" replace />;
+      return <Navigate to="/login" replace />;
     }
   }
 

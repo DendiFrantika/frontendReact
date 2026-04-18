@@ -3,8 +3,17 @@ import authService from '../services/auth-service';
 
 export const AuthContext = createContext(null);
 
+const extractUserPayload = (body) => {
+  if (body == null || typeof body !== 'object') return body;
+  return body?.data?.user ?? body?.user ?? body?.data ?? body;
+};
+
 const normalizeUserRole = (user, fallbackRole) => {
   const normalized = { ...(user || {}) };
+
+  if (typeof normalized.role === 'string') {
+    normalized.role = normalized.role.trim().toLowerCase();
+  }
 
   if (!normalized.role) {
     if (normalized.isAdmin || normalized.is_admin || fallbackRole === 'admin') {
@@ -38,22 +47,43 @@ export const AuthProvider = ({ children }) => {
 
         if (token) {
           try {
-             // Verifikasi token & ambil data profile terbaru dari backend
-             const res = await authService.getCurrentUser();
-             const userData = res.data || res.user || res;
-             
-             // Keep fallback role if backend somehow fails to provide one but frontend knows it
-             const mappedRole = storedUser ? JSON.parse(storedUser).role : null;
-             const normalized = normalizeUserRole(userData, mappedRole);
-             
-             setUser(normalized);
-             localStorage.setItem('user', JSON.stringify(normalized));
+            const res = await authService.getCurrentUser({ bootstrap: true });
+            const userData = extractUserPayload(res);
+            let mappedRole = null;
+            try {
+              mappedRole = storedUser ? JSON.parse(storedUser).role : null;
+            } catch {
+              mappedRole = null;
+            }
+            if (typeof mappedRole === 'string') {
+              mappedRole = mappedRole.trim().toLowerCase();
+            }
+
+            const normalized = normalizeUserRole(userData, mappedRole);
+            setUser(normalized);
+            localStorage.setItem('user', JSON.stringify(normalized));
           } catch (e) {
-             console.warn('Auto login validation failed (token may be expired)', e);
-             if (storedUser) setUser(normalizeUserRole(JSON.parse(storedUser)));
+            const status = e?.response?.status;
+            console.warn('Auto login validation failed (token may be expired)', e);
+
+            if (status === 401 || status === 403) {
+              setUser(null);
+            } else if (storedUser) {
+              try {
+                setUser(normalizeUserRole(JSON.parse(storedUser)));
+              } catch {
+                setUser(null);
+              }
+            } else {
+              setUser(null);
+            }
           }
         } else if (storedUser) {
-           setUser(normalizeUserRole(JSON.parse(storedUser)));
+          try {
+            localStorage.removeItem('user');
+          } catch {
+            /* noop */
+          }
         }
       } catch (err) {
         console.warn('Failed to parse or load stored user', err);

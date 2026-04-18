@@ -1,0 +1,146 @@
+.alur-flow-page {
+  max-width: 880px;
+}
+
+.alur-intro {
+  margin: 0 0 1.5rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #475569;
+}
+
+.alur-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 1.75rem;
+  padding: 12px 16px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.alur-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.alur-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.alur-step {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem 1.15rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.alur-step::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #2563eb;
+  border-radius: 14px 0 0 14px;
+}
+
+.alur-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  margin-right: 0.65rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  vertical-align: middle;
+}
+
+.alur-step-title {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+  display: inline;
+}
+
+.alur-step-body {
+  margin: 0;
+  padding-left: 0.15rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.alur-step-list {
+  margin: 0.65rem 0 0;
+  padding-left: 1.35rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.alur-step-list li {
+  margin-bottom: 0.35rem;
+}
+
+.alur-links {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alur-links a {
+  font-size: 0.8125rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #1d4ed8;
+  text-decoration: none;
+  border: 1px solid #e2e8f0;
+}
+
+.alur-links a:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.alur-arrow {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0 10px;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.alur-note {
+  margin-top: 2rem;
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #78350f;
+}
+
+.alur-note strong {
+  color: #92400e;
+}

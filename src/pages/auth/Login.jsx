@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import './Login.css';
+import { getAuthBackgroundImageUrl } from './authEnv';
+import { getRoleFromResponse, normalizeUserPayload } from './authRoles';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,50 +16,50 @@ export default function Login() {
     rememberMe: false
   });
 
-  const location = useLocation();
-
-  React.useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('expired') === 'true') {
-      setErrors({ submit: 'Sesi Anda telah berakhir, silakan login kembali.' });
-    }
-  }, [location]);
-
-  React.useEffect(() => {
-    if (isAuthenticated && user?.role) {
-      if (user.role === 'admin') navigate('/admin', { replace: true });
-      else if (user.role === 'dokter') navigate('/dokter', { replace: true });
-      else navigate('/pasien', { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
-
-  const [showPassword, setShowPassword] = useState(false); // 👈 TAMBAHAN
+  const [toasts, setToasts] = useState([]);
+  const [sessionExpiredOpen, setSessionExpiredOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getLoginUri = () => process.env.REACT_APP_API_LOGIN_URI || '/auth/login';
+  const pushToast = useCallback((message, variant = 'info') => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4200);
+  }, []);
 
-  const getRoleFromResponse = (data, userResponse) => {
-    if (data.role) return data.role;
-    if (userResponse?.role) return userResponse.role;
-    if (userResponse?.isAdmin || userResponse?.is_admin) return 'admin';
-    if (userResponse?.isDokter || userResponse?.is_dokter) return 'dokter';
-    if (userResponse?.isPasien || userResponse?.is_pasien) return 'pasien';
-    return null;
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === 'true') {
+      setSessionExpiredOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.role) return;
+    const r = String(user.role).toLowerCase();
+    if (r === 'admin') navigate('/admin', { replace: true });
+    else if (r === 'dokter') navigate('/dokter', { replace: true });
+    else navigate('/pasien', { replace: true });
+  }, [isAuthenticated, user, navigate]);
+
+  const closeSessionModal = () => {
+    setSessionExpiredOpen(false);
+    navigate({ pathname: '/login', search: '' }, { replace: true });
   };
 
-  const normalizeUser = (userResponse, roleFromResponse) => {
-    const baseUser = typeof userResponse === 'object'
-      ? { ...userResponse }
-      : { email: formData.email };
+  const loginBgImageUrl = getAuthBackgroundImageUrl();
+  const loginBgStyle = loginBgImageUrl
+    ? { '--login-bg-image': `url(${JSON.stringify(loginBgImageUrl)})` }
+    : undefined;
 
-    return {
-      ...baseUser,
-      role:
-        roleFromResponse ||
-        baseUser.role ||
-        (baseUser.email?.includes('admin') ? 'admin' : 'pasien')
-    };
+  const getLoginCandidates = () => {
+    const raw = String(process.env.REACT_APP_API_LOGIN_URI || '/auth/login').trim();
+    const normalized = raw.startsWith('/') ? raw : `/${raw}`;
+    const candidates = [normalized, '/auth/login', '/api/auth/login'];
+    return [...new Set(candidates)];
   };
 
   const handleChange = (e) => {
@@ -103,10 +105,25 @@ export default function Login() {
 
     if (Object.keys(validationErrors).length === 0) {
       try {
-        const response = await axiosInstance.post(getLoginUri(), {
+        const payload = {
           email: formData.email,
           password: formData.password
-        });
+        };
+        let response = null;
+        let lastError = null;
+        for (const uri of getLoginCandidates()) {
+          try {
+            response = await axiosInstance.post(uri, payload);
+            break;
+          } catch (err) {
+            lastError = err;
+            const status = err?.response?.status;
+            const message = String(err?.response?.data?.message || '').toLowerCase();
+            const isCsrfMismatch = status === 419 || message.includes('csrf');
+            if (!isCsrfMismatch) break;
+          }
+        }
+        if (!response) throw lastError;
 
         const data = response.data || {};
         const token = data.token || data.access_token || data.data?.token;
@@ -117,16 +134,20 @@ export default function Login() {
           localStorage.setItem('token', token);
         }
 
-        const userToSave = normalizeUser(userResponse, roleFromResponse);
+        const userToSave = normalizeUserPayload(
+          userResponse,
+          roleFromResponse,
+          formData.email
+        );
         login(userToSave, roleFromResponse);
+        pushToast('Login berhasil. Mengalihkan…', 'success');
 
-        if (userToSave.role === 'admin') {
-          navigate('/admin');
-        } else if (userToSave.role === 'dokter') {
-          navigate('/dokter');
-        } else {
-          navigate('/pasien');
-        }
+        window.setTimeout(() => {
+          const r = String(userToSave.role || 'pasien').toLowerCase();
+          if (r === 'admin') navigate('/admin');
+          else if (r === 'dokter') navigate('/dokter');
+          else navigate('/pasien');
+        }, 450);
 
       } catch (error) {
         const message =
@@ -134,6 +155,7 @@ export default function Login() {
           'Login gagal, cek email/password';
 
         setErrors({ submit: message });
+        pushToast(message, 'error');
       }
     } else {
       setErrors(validationErrors);
@@ -143,7 +165,67 @@ export default function Login() {
   };
 
   return (
-    <main className="login-container">
+    <main
+      className={`login-container${loginBgImageUrl ? ' login-container--bg-image' : ''}`}
+    >
+      <div
+        className={`login-bg${loginBgImageUrl ? ' login-bg--image' : ''}`}
+        style={loginBgStyle}
+        aria-hidden="true"
+      />
+      <div className="login-bg-shapes" aria-hidden="true">
+        <span className="login-shape login-shape--1" />
+        <span className="login-shape login-shape--2" />
+        <span className="login-shape login-shape--3" />
+      </div>
+
+      <div
+        className="login-toast-region"
+        role="region"
+        aria-label="Notifikasi"
+        aria-live="polite"
+      >
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`login-toast login-toast--${t.variant}`}
+            role="status"
+          >
+            {t.message}
+          </div>
+        ))}
+      </div>
+
+      {sessionExpiredOpen && (
+        <div
+          className="login-modal-backdrop"
+          role="presentation"
+          onClick={closeSessionModal}
+        >
+          <div
+            className="login-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="login-session-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="login-session-title" className="login-modal-title">
+              Sesi berakhir
+            </h2>
+            <p className="login-modal-text">
+              Sesi Anda telah berakhir. Silakan masuk kembali untuk melanjutkan.
+            </p>
+            <button
+              type="button"
+              className="login-modal-button"
+              onClick={closeSessionModal}
+            >
+              Mengerti
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="login-card">
 
         {/* HEADER */}
@@ -156,7 +238,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="login-form" noValidate>
 
           {errors.submit && (
-            <div className="error-message error-submit">
+            <div className="error-message error-submit" role="alert">
               {errors.submit}
             </div>
           )}
@@ -171,6 +253,7 @@ export default function Login() {
               onChange={handleChange}
               className={`form-input ${errors.email ? 'input-error' : ''}`}
               placeholder="nama@email.com"
+              disabled={isSubmitting}
             />
             {errors.email && <span className="error-message">{errors.email}</span>}
           </div>
@@ -179,30 +262,24 @@ export default function Login() {
           <div className="form-group">
             <label className="form-label">Password</label>
 
-            <div style={{ position: 'relative' }}>
+            <div className="login-password-wrap">
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`form-input ${errors.password ? 'input-error' : ''}`}
+                className={`form-input form-input--with-toggle ${errors.password ? 'input-error' : ''}`}
                 placeholder="Masukkan password"
+                autoComplete="current-password"
+                disabled={isSubmitting}
               />
 
-              {/* TOGGLE BUTTON */}
               <button
                 type="button"
+                className="login-password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '18px'
-                }}
+                aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                disabled={isSubmitting}
               >
                 {showPassword ? '🙈' : '👁️'}
               </button>
@@ -213,17 +290,20 @@ export default function Login() {
 
           {/* OPTIONS */}
           <div className="form-options">
-            <label>
+            <label className="remember-me">
               <input
                 type="checkbox"
                 name="rememberMe"
                 checked={formData.rememberMe}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
-              Ingat saya
+              <span className="checkbox-label">Ingat saya</span>
             </label>
 
-            <a href="/forgot-password">Lupa password?</a>
+            <Link to="/forgot-password" className="forgot-password">
+              Lupa password?
+            </Link>
           </div>
 
           {/* BUTTON */}
@@ -236,7 +316,10 @@ export default function Login() {
         {/* FOOTER */}
         <div className="login-footer">
           <p>
-            Belum punya akun? <a href="/register">Daftar</a>
+            Belum punya akun?{' '}
+            <Link to="/register" className="register-link">
+              Daftar
+            </Link>
           </p>
         </div>
 

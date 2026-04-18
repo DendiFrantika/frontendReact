@@ -5,6 +5,8 @@ import './DokterLayout.css';
 
 const DokterLayout = ({ title, children }) => {
   const { user, logout } = useAuth();
+  const userName = String(user?.nama || user?.name || 'Dokter');
+  const userInitial = userName.charAt(0)?.toUpperCase() || 'D';
 
   return (
     <div className="dokter-layout">
@@ -33,9 +35,9 @@ const DokterLayout = ({ title, children }) => {
         </nav>
         <div className="sidebar-footer">
           <div className="user-info">
-            <div className="user-avatar">{user?.nama?.charAt(0).toUpperCase()}</div>
+            <div className="user-avatar">{userInitial}</div>
             <div className="user-details">
-              <p className="user-name">{user?.nama}</p>
+              <p className="user-name">{userName}</p>
               <p className="user-role">Dokter</p>
             </div>
           </div>

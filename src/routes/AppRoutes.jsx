@@ -24,6 +24,7 @@ import Laporan from '../pages/admin/Laporan';
 import Pengaturan from '../pages/admin/Pengaturan';
 import Analytics from '../pages/admin/Analytics';
 import Aktivitas from '../pages/admin/Aktivitas';
+import AlurAdminKasir from '../pages/admin/AlurAdminKasir';
 
 // Pasien
 import PasienDashboard from '../pages/pasien/Dashboard';
@@ -55,6 +56,7 @@ const AppRoutes = () => {
 
       {/* Admin */}
       <Route path="/admin" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
+      <Route path="/admin/alur-kerja" element={<PrivateRoute role="admin"><AlurAdminKasir /></PrivateRoute>} />
       <Route path="/admin/pasien" element={<PrivateRoute role="admin"><Pasien /></PrivateRoute>} />
       <Route path="/admin/dokter" element={<PrivateRoute role="admin"><Dokter /></PrivateRoute>} />
       <Route path="/admin/jadwal" element={<PrivateRoute role="admin"><JadwalAdmin /></PrivateRoute>} />

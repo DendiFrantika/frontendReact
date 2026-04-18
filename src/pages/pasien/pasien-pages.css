@@ -1,0 +1,96 @@
+/* Tambahan layout halaman pasien (impor bersama Dashboard.css admin) */
+
+.pasien-page-header {
+  margin-bottom: 24px;
+}
+
+.pasien-page-header h1 {
+  font-size: 1.75rem;
+  color: #2c3e50;
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.pasien-page-header p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.95rem;
+}
+
+.pasien-banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.pasien-banner--error {
+  background: #fdeaea;
+  border-left: 4px solid #e74c3c;
+  color: #7f1d1d;
+}
+
+.pasien-banner--success {
+  background: #e8f8ef;
+  border-left: 4px solid #2ecc71;
+  color: #14532d;
+}
+
+.pasien-banner a {
+  font-weight: 600;
+  color: #0d47a1;
+}
+
+.pasien-banner--success a {
+  color: #166534;
+}
+
+.pasien-empty {
+  padding: 28px 20px;
+  text-align: center;
+  color: #7f8c8d;
+  background: #fafbfc;
+  border-radius: 10px;
+  border: 1px dashed #dee2e6;
+}
+
+.pasien-empty a {
+  font-weight: 600;
+  color: #3498db;
+  text-decoration: none;
+}
+
+.pasien-empty a:hover {
+  text-decoration: underline;
+}
+
+.pasien-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pasien-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: #ecf0f1;
+  color: #2c3e50;
+}
+
+.pasien-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  background: #fff;
+}
+
+.pasien-table-wrap .table {
+  margin-top: 0;
+}

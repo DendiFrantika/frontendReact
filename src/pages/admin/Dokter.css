@@ -6,6 +6,36 @@
   margin-bottom: 2rem;
 }
 
+.dokter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.dokter-toolbar label {
+  font-size: 13px;
+  color: #64748b;
+  margin-right: 6px;
+}
+
+.dokter-search-input {
+  flex: 1;
+  min-width: 220px;
+  max-width: 440px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.dokter-search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 .dokter-subtitle {
   margin: 0;
   font-size: 14px;

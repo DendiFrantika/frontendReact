@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import axiosInstance from '../../api/axios';
 import './Dashboard.css'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie } from 'recharts'; // npm install recharts
 import { Link } from 'react-router-dom';
+import { requestWithFallback } from '../../services/adminCrudApi';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -21,8 +23,6 @@ const AdminDashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [timeRange, setTimeRange] = useState('week');
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
   const [serviceData, setServiceData] = useState([
     { name: 'Umum', value: 40, fill: COLORS[0] },
     { name: 'Gigi', value: 25, fill: COLORS[1] },
@@ -30,17 +30,13 @@ const AdminDashboard = () => {
     { name: 'Kulit', value: 15, fill: COLORS[3] },
   ]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  useEffect(() => {
-    fetchChartData(timeRange);
-  }, [timeRange]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
-      const statsRes = await axiosInstance.get('/admin/dashboard');
+      const statsRes = await requestWithFallback([
+        { method: 'get', url: '/admin/dashboard' },
+        { method: 'get', url: '/dashboard' },
+        { method: 'get', url: '/dashboard/stats' },
+      ]);
       const data = statsRes.data;
       
       setStats({
@@ -62,7 +58,10 @@ const AdminDashboard = () => {
       }
       
       try {
-        const activitiesRes = await axiosInstance.get('/admin/recent-activities');
+        const activitiesRes = await requestWithFallback([
+          { method: 'get', url: '/admin/recent-activities' },
+          { method: 'get', url: '/dashboard/recent-activities' },
+        ]);
         setRecentActivities(activitiesRes.data);
       } catch (e) {
         console.warn('Recent activities mock used (endpoint maybe missing)');
@@ -73,11 +72,14 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchChartData = async (range) => {
+  const fetchChartData = useCallback(async (range) => {
     try {
-      const response = await axiosInstance.get(`/admin/chart-data?range=${range}`);
+      const response = await requestWithFallback([
+        { method: 'get', url: `/admin/chart-data?range=${range}` },
+        { method: 'get', url: `/dashboard/chart-data?range=${range}` },
+      ]);
       setChartData(response.data);
     } catch (error) {
       console.error('Error fetching chart data:', error);
@@ -91,9 +93,18 @@ const AdminDashboard = () => {
         { name: 'Sabtu', pendaftaran: 10, pasien: 6 },
       ]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    fetchChartData(timeRange);
+  }, [timeRange, fetchChartData]);
 
   const quickActions = [
+    { icon: '🔀', label: 'Alur Admin–Kasir', link: '/admin/alur-kerja' },
     { icon: '👥', label: 'Manajemen Pasien', link: '/admin/pasien' },
     { icon: '👨‍⚕️', label: 'Kelola Dokter', link: '/admin/dokter' },
     { icon: '📅', label: 'Jadwal', link: '/admin/jadwal' },

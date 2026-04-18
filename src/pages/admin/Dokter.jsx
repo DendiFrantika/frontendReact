@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import axiosInstance from '../../api/axios';
+import AdminCrudModal from '../../components/AdminCrudModal';
+import {
+  normalizeErrorMessage,
+  normalizeFieldErrors,
+  requestWithFallback,
+  unpackCollection,
+} from '../../services/adminCrudApi';
+import { validateDokterForm } from '../../services/adminMasterValidation';
 import './Dokter.css';
 
 const HARI_OPTIONS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -20,20 +27,38 @@ export default function Dokter() {
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchDebounced, setSearchDebounced] = useState('');
 
-  useEffect(() => { fetchDoctors(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(searchInput.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
-  const fetchDoctors = async () => {
+  const fetchDoctors = useCallback(async () => {
     setLoading(true);
+    const params = {};
+    if (searchDebounced) params.search = searchDebounced;
     try {
-      const res = await axiosInstance.get('/dokter');
-      setDoctors(res.data.data ?? res.data);
+      const res = await requestWithFallback([
+        { method: 'get', url: '/admin/dokter', params },
+        { method: 'get', url: '/dokter', params },
+      ]);
+      setDoctors(unpackCollection(res.data));
     } catch (err) {
       console.error('Error fetching doctors:', err.response?.data ?? err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchDebounced]);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, [fetchDoctors]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,25 +68,53 @@ export default function Dokter() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitLoading(true);
+    setSubmitError('');
     setErrors({});
+    const clientErrors = validateDokterForm(formData, { editing: Boolean(editingId) });
+    if (Object.keys(clientErrors).length > 0) {
+      setErrors(clientErrors);
+      return;
+    }
+    setSubmitLoading(true);
     try {
       if (editingId) {
         const { nama, spesialisasi, no_telepon, hari_libur, status } = formData;
-        await axiosInstance.put(`/dokter/${editingId}`, {
-          nama, spesialisasi, no_telepon, hari_libur, status: Number(status),
-        });
+        await requestWithFallback([
+          {
+            method: 'put',
+            url: `/admin/dokter/${editingId}`,
+            data: { nama, spesialisasi, no_telepon, hari_libur, status: Number(status) },
+          },
+          {
+            method: 'put',
+            url: `/dokter/${editingId}`,
+            data: { nama, spesialisasi, no_telepon, hari_libur, status: Number(status) },
+          },
+        ]);
       } else {
-        await axiosInstance.post('/dokter', { ...formData, status: Number(formData.status) });
+        await requestWithFallback([
+          {
+            method: 'post',
+            url: '/admin/dokter',
+            data: { ...formData, status: Number(formData.status) },
+          },
+          {
+            method: 'post',
+            url: '/dokter',
+            data: { ...formData, status: Number(formData.status) },
+          },
+        ]);
       }
       await fetchDoctors();
       cancelForm();
+      setNotice(editingId ? 'Data dokter berhasil diperbarui.' : 'Data dokter berhasil ditambahkan.');
     } catch (err) {
       console.error('Error saving doctor:', err.response?.data ?? err);
-      if (err.response?.data?.errors) {
-        setErrors(err.response.data.errors);
+      const fieldErrors = normalizeFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
       } else {
-        alert(err.response?.data?.message ?? 'Terjadi kesalahan, coba lagi.');
+        setSubmitError(normalizeErrorMessage(err, 'Terjadi kesalahan, coba lagi.'));
       }
     } finally {
       setSubmitLoading(false);
@@ -87,30 +140,37 @@ export default function Dokter() {
     setShowForm(true);
   };
 
-  // ✅ Toggle status aktif/nonaktif langsung dari tabel
   const toggleStatus = async (doc) => {
     const statusBaru = doc.status === true || doc.status === 1 ? 0 : 1;
-    const konfirmasi = window.confirm(
-      `${statusBaru === 1 ? 'Aktifkan' : 'Nonaktifkan'} dokter ${doc.nama}?`
-    );
-    if (!konfirmasi) return;
     try {
-      await axiosInstance.put(`/dokter/${doc.id}`, { status: statusBaru });
+      await requestWithFallback([
+        { method: 'put', url: `/admin/dokter/${doc.id}`, data: { status: statusBaru } },
+        { method: 'put', url: `/dokter/${doc.id}`, data: { status: statusBaru } },
+      ]);
       fetchDoctors();
+      setNotice(`Status dokter ${doc.nama} berhasil diubah.`);
     } catch (err) {
       console.error('Error toggle status:', err.response?.data ?? err);
-      alert('Gagal mengubah status dokter.');
+      setSubmitError('Gagal mengubah status dokter.');
     }
   };
 
-  const deleteDoctor = async (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus dokter ini?')) {
-      try {
-        await axiosInstance.delete(`/dokter/${id}`);
-        fetchDoctors();
-      } catch (err) {
-        console.error('Error deleting doctor:', err);
-      }
+  const deleteDoctor = async () => {
+    if (!deleteTarget?.id) return;
+    setDeleteLoading(true);
+    try {
+      await requestWithFallback([
+        { method: 'delete', url: `/admin/dokter/${deleteTarget.id}` },
+        { method: 'delete', url: `/dokter/${deleteTarget.id}` },
+      ]);
+      await fetchDoctors();
+      setDeleteTarget(null);
+      setNotice('Data dokter berhasil dihapus.');
+    } catch (err) {
+      console.error('Error deleting doctor:', err);
+      setSubmitError('Gagal menghapus data dokter.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -119,6 +179,7 @@ export default function Dokter() {
     setEditingId(null);
     setFormData(defaultForm);
     setErrors({});
+    setSubmitError('');
   };
 
   const renderError = (field) =>
@@ -136,24 +197,44 @@ export default function Dokter() {
         </button>
       </div>
 
-      {showForm && (
+      <div className="dokter-toolbar">
+        <label htmlFor="dokter-search">Cari</label>
+        <input
+          id="dokter-search"
+          className="dokter-search-input"
+          type="search"
+          placeholder="Cari nama atau spesialisasi…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          autoComplete="off"
+        />
+      </div>
+
+      {notice && <div className="dokter-card"><p className="dokter-subtitle">{notice}</p></div>}
+
+      <AdminCrudModal
+        open={showForm}
+        title={editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'}
+        onClose={cancelForm}
+      >
         <div className="dokter-card">
           <p className="form-title">{editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'}</p>
+          {submitError ? <p className="form-error">{submitError}</p> : null}
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <div className="form-group">
                 <label className="form-label">Nama lengkap</label>
-                <input type="text" name="nama" value={formData.nama} onChange={handleChange} required placeholder="dr. Budi Santoso" />
+                <input type="text" name="nama" value={formData.nama} onChange={handleChange} required maxLength={255} placeholder="dr. Budi Santoso" />
                 {renderError('nama')}
               </div>
               <div className="form-group">
                 <label className="form-label">Spesialisasi</label>
-                <input type="text" name="spesialisasi" value={formData.spesialisasi} onChange={handleChange} required placeholder="Umum / Gigi / Anak..." />
+                <input type="text" name="spesialisasi" value={formData.spesialisasi} onChange={handleChange} required maxLength={100} placeholder="Umum / Gigi / Anak..." />
                 {renderError('spesialisasi')}
               </div>
               <div className="form-group">
                 <label className="form-label">No. telepon</label>
-                <input type="text" name="no_telepon" value={formData.no_telepon} onChange={handleChange} required placeholder="08xx..." />
+                <input type="text" name="no_telepon" value={formData.no_telepon} onChange={handleChange} required maxLength={20} placeholder="08xx..." />
                 {renderError('no_telepon')}
               </div>
               <div className="form-group">
@@ -182,22 +263,22 @@ export default function Dokter() {
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">No. identitas</label>
-                    <input type="text" name="no_identitas" value={formData.no_identitas} onChange={handleChange} required />
+                    <input type="text" name="no_identitas" value={formData.no_identitas} onChange={handleChange} required maxLength={50} />
                     {renderError('no_identitas')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">No. lisensi</label>
-                    <input type="text" name="no_lisensi" value={formData.no_lisensi} onChange={handleChange} required />
+                    <input type="text" name="no_lisensi" value={formData.no_lisensi} onChange={handleChange} required maxLength={50} />
                     {renderError('no_lisensi')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Email</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} required maxLength={255} />
                     {renderError('email')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Alamat</label>
-                    <input type="text" name="alamat" value={formData.alamat} onChange={handleChange} required />
+                    <input type="text" name="alamat" value={formData.alamat} onChange={handleChange} required maxLength={500} />
                     {renderError('alamat')}
                   </div>
                   <div className="form-group">
@@ -222,7 +303,7 @@ export default function Dokter() {
             </div>
           </form>
         </div>
-      )}
+      </AdminCrudModal>
 
       {loading ? (
         <p className="loading-text">Memuat data dokter...</p>
@@ -255,7 +336,6 @@ export default function Dokter() {
                     <td><span className="jam-text">{doc.jam_praktek_mulai} – {doc.jam_praktek_selesai}</span></td>
                     <td>{doc.hari_libur ?? '–'}</td>
                     <td>
-                      {/* ✅ Badge bisa diklik untuk toggle status */}
                       <button
                         className={isAktif(doc.status) ? 'badge-aktif badge-toggle' : 'badge-nonaktif badge-toggle'}
                         onClick={() => toggleStatus(doc)}
@@ -266,7 +346,7 @@ export default function Dokter() {
                     </td>
                     <td>
                       <button className="btn-small" onClick={() => editDoctor(doc)}>Edit</button>
-                      <button className="btn-danger" onClick={() => deleteDoctor(doc.id)}>Hapus</button>
+                      <button className="btn-danger" onClick={() => setDeleteTarget(doc)}>Hapus</button>
                     </td>
                   </tr>
                 ))
@@ -275,6 +355,33 @@ export default function Dokter() {
           </table>
         </div>
       )}
+
+      <AdminCrudModal
+        open={Boolean(deleteTarget)}
+        title="Konfirmasi Hapus Dokter"
+        onClose={() => setDeleteTarget(null)}
+        size="sm"
+      >
+        <p>Hapus data dokter <strong>{deleteTarget?.nama}</strong>?</p>
+        <div className="form-actions">
+          <button
+            type="button"
+            className="btn-danger"
+            onClick={deleteDoctor}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setDeleteTarget(null)}
+            disabled={deleteLoading}
+          >
+            Batal
+          </button>
+        </div>
+      </AdminCrudModal>
     </AdminLayout>
   );
 }

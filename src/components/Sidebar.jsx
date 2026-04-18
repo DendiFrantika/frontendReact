@@ -7,11 +7,20 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const userName = String(user?.nama || user?.name || 'User');
+  const userInitial = userName.charAt(0).toUpperCase() || 'U';
+  const roleLabel =
+    user?.role === 'admin'
+      ? 'Administrator'
+      : user?.role === 'dokter'
+      ? 'Dokter'
+      : 'Pasien';
 
   const getMenuItems = () => {
     if (user?.role === 'admin') {
       return [
         { path: '/admin', label: 'Dashboard', icon: '📊' },
+        { path: '/admin/alur-kerja', label: 'Alur kerja', icon: '🔀' },
         { path: '/admin/pasien', label: 'Pasien', icon: '👥' },
         { path: '/admin/dokter', label: 'Dokter', icon: '👨‍⚕️' },
         { path: '/admin/jadwal', label: 'Jadwal Kerja', icon: '📅' },
@@ -67,10 +76,10 @@ const Sidebar = () => {
 
       <div className="sidebar-footer">
         <div className="user-info">
-          <div className="user-avatar">{user?.nama?.charAt(0).toUpperCase()}</div>
+          <div className="user-avatar">{userInitial}</div>
           <div className="user-details">
-            <p className="user-name">{user?.nama}</p>
-            <p className="user-role">{user?.role === 'admin' ? 'Administrator' : 'Pasien'}</p>
+            <p className="user-name">{userName}</p>
+            <p className="user-role">{roleLabel}</p>
           </div>
         </div>
         <button className="logout-btn" onClick={() => {
