@@ -55,12 +55,7 @@ export default function Login() {
     ? { '--login-bg-image': `url(${JSON.stringify(loginBgImageUrl)})` }
     : undefined;
 
-  const getLoginCandidates = () => {
-    const raw = String(process.env.REACT_APP_API_LOGIN_URI || '/auth/login').trim();
-    const normalized = raw.startsWith('/') ? raw : `/${raw}`;
-    const candidates = [normalized, '/auth/login', '/api/auth/login'];
-    return [...new Set(candidates)];
-  };
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -97,72 +92,64 @@ export default function Login() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrors({});
+  e.preventDefault();
+  setIsSubmitting(true);
+  setErrors({});
 
-    const validationErrors = validateForm();
+  const validationErrors = validateForm();
 
-    if (Object.keys(validationErrors).length === 0) {
-      try {
-        const payload = {
-          email: formData.email,
-          password: formData.password
-        };
-        let response = null;
-        let lastError = null;
-        for (const uri of getLoginCandidates()) {
-          try {
-            response = await axiosInstance.post(uri, payload);
-            break;
-          } catch (err) {
-            lastError = err;
-            const status = err?.response?.status;
-            const message = String(err?.response?.data?.message || '').toLowerCase();
-            const isCsrfMismatch = status === 419 || message.includes('csrf');
-            if (!isCsrfMismatch) break;
-          }
-        }
-        if (!response) throw lastError;
+  if (Object.keys(validationErrors).length === 0) {
+    try {
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+      };
 
-        const data = response.data || {};
-        const token = data.token || data.access_token || data.data?.token;
-        const userResponse = data.user || data.data?.user || data;
-        const roleFromResponse = getRoleFromResponse(data, userResponse);
+      // ✅ LANGSUNG KE ENDPOINT YANG BENAR
+      const response = await axiosInstance.post('/auth/login', payload);
 
-        if (token) {
-          localStorage.setItem('token', token);
-        }
+      const data = response.data || {};
+      const token = data.token;
+      const userResponse = data.user;
 
-        const userToSave = normalizeUserPayload(
-          userResponse,
-          roleFromResponse,
-          formData.email
-        );
-        login(userToSave, roleFromResponse);
-        pushToast('Login berhasil. Mengalihkan…', 'success');
-
-        window.setTimeout(() => {
-          const r = String(userToSave.role || 'pasien').toLowerCase();
-          if (r === 'admin') navigate('/admin');
-          else if (r === 'dokter') navigate('/dokter');
-          else navigate('/pasien');
-        }, 450);
-
-      } catch (error) {
-        const message =
-          error?.response?.data?.message ||
-          'Login gagal, cek email/password';
-
-        setErrors({ submit: message });
-        pushToast(message, 'error');
+      if (token) {
+        localStorage.setItem('token', token);
       }
-    } else {
-      setErrors(validationErrors);
-    }
 
-    setIsSubmitting(false);
-  };
+      const userToSave = normalizeUserPayload(
+        userResponse,
+        userResponse.role,
+        formData.email
+      );
+
+      login(userToSave, userResponse.role);
+      pushToast('Login berhasil 🚀', 'success');
+
+      setTimeout(() => {
+        const role = String(userResponse.role || 'pasien').toLowerCase();
+
+        if (role === 'admin') navigate('/admin');
+        else if (role === 'dokter') navigate('/dokter');
+        else navigate('/pasien');
+      }, 500);
+
+    } catch (error) {
+      console.log(error);
+
+      const message =
+        error?.response?.data?.message ||
+        'Login gagal, cek email/password';
+
+      setErrors({ submit: message });
+      pushToast(message, 'error');
+    }
+  } else {
+    setErrors(validationErrors);
+  }
+
+  setIsSubmitting(false);
+};
+
 
   return (
     <main
