@@ -1,78 +1,51 @@
 import apiService from './api-service';
 
+const BASE_URL = '/admin/pendaftaran'; // ✅ penting
+
 const pendaftaranService = {
   getAll: async () => {
-    try {
-      const response = await apiService.get('/admin/pendaftaran');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.get(BASE_URL);
+    return response.data;
   },
 
   getById: async (id) => {
-    try {
-      const response = await apiService.get(`/pendaftaran/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.get(`${BASE_URL}/${id}`);
+    return response.data;
   },
 
   create: async (data) => {
-    try {
-      const response = await apiService.post('/pendaftaran', data);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.post(BASE_URL, data);
+    return response.data;
   },
 
   update: async (id, data) => {
-    try {
-      const response = await apiService.put(`/pendaftaran/${id}`, data);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.put(`${BASE_URL}/${id}`, data);
+    return response.data;
   },
 
   delete: async (id) => {
-    try {
-      const response = await apiService.delete(`/pendaftaran/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.delete(`${BASE_URL}/${id}`);
+    return response.data;
   },
 
   getTodayRegistrations: async () => {
-    try {
-      const response = await apiService.get('/pendaftaran/today');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.get(`${BASE_URL}/today`);
+    return response.data;
   },
 
   updateStatus: async (id, status) => {
-    try {
-      const response = await apiService.put(`/pendaftaran/${id}/status`, { status });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.put(
+      `${BASE_URL}/${id}/status`,
+      { status }
+    );
+    return response.data;
   },
 
   getStatistics: async (startDate, endDate) => {
-    try {
-      const response = await apiService.get('/pendaftaran/statistics', {
-        params: { startDate, endDate },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.get(`${BASE_URL}/statistics`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
   },
 };
 

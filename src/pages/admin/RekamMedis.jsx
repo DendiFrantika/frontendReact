@@ -29,8 +29,8 @@ function ModalForm({ mode, data, onClose, onSave }) {
 
   useEffect(() => {
     // Ambil daftar pasien dan dokter untuk dropdown
-    apiService.get('/pasien').then(r => setPasienList(r.data?.data || []));
-    apiService.get('/dokter').then(r => setDokterList(r.data?.data || []));
+    apiService.get('/admin/pasien').then(r => setPasienList(r.data?.data || []));
+    apiService.get('/admin/dokter').then(r => setDokterList(r.data?.data || []));
   }, []);
 
   const handleChange = (e) => {
@@ -284,9 +284,15 @@ export default function RekamMedis() {
 
   setDeleting(true);
   try {
-    await rekamMedisService.delete(Number(deleteId));
+    await rekamMedisService.delete(deleteId);
+
+    // 🔥 langsung hapus dari state (tanpa fetch ulang)
+    setRekamMedisData(prev =>
+      prev.filter(item => item.id !== deleteId)
+    );
+
     setDeleteId(null);
-    fetchData();
+
   } catch (err) {
     console.error(err);
     alert('Gagal menghapus data');
@@ -321,10 +327,12 @@ export default function RekamMedis() {
     data={modalForm.data}
     onClose={() => setModalForm(null)}
     onSave={async () => {
-  setModalForm(null);
-  setRekamMedisData([]); // kosongkan dulu paksa re-render
-  await fetchData('rekamMedis');
-}}
+    setModalForm(null);
+
+    setTimeout(async () => {
+      await fetchData('rekamMedis');
+    }, 300);
+  }}
   />
 )}
 

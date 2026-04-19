@@ -83,31 +83,54 @@ export default function DaftarBerobat() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setBanner(null);
-    setSaving(true);
-    try {
-      const dokter_id = Number(formData.doctorId);
-      const jadwal_id = Number(formData.scheduleId);
-      await axiosInstance.post('/pasien/daftar', {
-        dokter_id,
-        jadwal_id,
-      });
-      setBanner({ type: 'success', text: 'Pendaftaran berhasil. Lihat antrian di menu Antrian.' });
-      setFormData({ doctorId: '', scheduleId: '' });
-      setSchedules([]);
-    } catch (err) {
-      console.error('Error creating appointment', err);
-      const msg =
-        err.response?.data?.message ??
-        (typeof err.response?.data === 'string'
-          ? err.response.data
-          : 'Pendaftaran gagal. Periksa data dan coba lagi.');
-      setBanner({ type: 'error', text: msg });
-    } finally {
-      setSaving(false);
+  e.preventDefault();
+  setBanner(null);
+  setSaving(true);
+
+  try {
+    const dokter_id = Number(formData.doctorId);
+    const jadwal_id = Number(formData.scheduleId);
+
+    const selectedSchedule = schedules.find(
+      (s) => Number(s.id) === jadwal_id
+    );
+
+    if (!selectedSchedule) {
+      throw new Error('Jadwal tidak ditemukan');
     }
-  };
+
+    const payload = {
+      dokter_id,
+      tanggal_pendaftaran: selectedSchedule.tanggal, // ⬅️ penting
+      jam_kunjungan: selectedSchedule.jam,           // ⬅️ penting
+      keluhan: 'Konsultasi umum', // bisa kamu ganti pakai input form nanti
+    };
+
+    console.log('Payload:', payload);
+
+    await axiosInstance.post('/pasien/daftar', payload);
+
+    setBanner({
+      type: 'success',
+      text: 'Pendaftaran berhasil. Lihat antrian di menu Antrian.',
+    });
+
+    setFormData({ doctorId: '', scheduleId: '' });
+    setSchedules([]);
+
+  } catch (err) {
+    console.error('ERROR VALIDASI:', err.response?.data);
+    setBanner({
+      type: 'error',
+      text:
+        err.response?.data?.message ||
+        JSON.stringify(err.response?.data?.errors) ||
+        'Pendaftaran gagal',
+    });
+  } finally {
+    setSaving(false);
+  }
+};
 
   return (
     <div className="admin-layout">
