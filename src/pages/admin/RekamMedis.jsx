@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import rekamMedisService from '../../services/rekam-medis-service';
 import pendaftaranService from '../../services/pendaftaran-service';
@@ -246,42 +246,38 @@ export default function RekamMedis() {
   const [deleteId,    setDeleteId]    = useState(null);
   const [deleting,    setDeleting]    = useState(false);
 
-  const fetchData = useCallback(async (tab = null) => {
-    const targetTab = tab ?? activeTab;
-    setLoading(true);
-    setError(null);
-    try {
-      if (targetTab === 'rekamMedis') {
-        const result = await rekamMedisService.getAll();
-        const items = result.data ?? result.rekam_medis ?? result;
-        setRekamMedisData([...(Array.isArray(items) ? items : [])]);
-      } else if (targetTab === 'antrian') {
-        const result = await pendaftaranService.getAll();
-        const semua = result.data || result;
-        setAntrianData(
-          semua.filter((p) =>
-            ['pending', 'confirmed', 'checked_in'].includes(p.status)
-          )
-        );
-      } else if (targetTab === 'riwayat') {
-        const result = await pendaftaranService.getAll();
-        const semua = result.data || result;
-        setRiwayatData(
-          semua.filter((p) =>
-            ['completed', 'cancelled'].includes(p.status)
-          )
-        );
-      }
-    } catch (err) {
-      setError(err.message || 'Gagal mengambil data');
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab]);
+  const fetchData = async (tab = activeTab) => {
+  setLoading(true);
+  setError(null);
+  try {
+    if (tab === 'rekamMedis') {
+  const result = await rekamMedisService.getAll();
+  const items = result.data ?? result.rekam_medis ?? result;
+  // Spread array baru agar React mendeteksi perubahan
+  setRekamMedisData([...( Array.isArray(items) ? items : [] )]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    } else if (tab === 'antrian') {
+      const result = await pendaftaranService.getAll();
+      const semua  = result.data || result;
+      setAntrianData(semua.filter(p =>
+        ['pending', 'confirmed', 'checked_in'].includes(p.status)
+      ));
+
+    } else if (tab === 'riwayat') {
+      const result = await pendaftaranService.getAll();
+      const semua  = result.data || result;
+      setRiwayatData(semua.filter(p =>
+        ['completed', 'cancelled'].includes(p.status)
+      ));
+    }
+  } catch (err) {
+    setError(err.message || 'Gagal mengambil data');
+  } finally {
+    setLoading(false);
+  }
+};
+
+  useEffect(() => { fetchData(activeTab); }, [activeTab]);
 
   const handleDelete = async () => {
   if (deleteId === null) return;

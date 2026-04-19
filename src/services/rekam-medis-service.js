@@ -1,88 +1,63 @@
 import apiService from './api-service';
 
+const BASE_URL = '/admin/rekam-medis'; // ✅ tambahin ini biar rapi
+
 const rekamMedisService = {
   getAll: async () => {
-    try {
-      const response = await apiService.get('/rekam-medis');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.get(BASE_URL);
+    return response.data;
   },
 
   getById: async (id) => {
-    try {
-      const response = await apiService.get(`/rekam-medis/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.get(`${BASE_URL}/${id}`);
+    return response.data;
   },
 
   getByPatientId: async (patientId) => {
-    try {
-      const response = await apiService.get(`/rekam-medis/pasien/${patientId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.get(`${BASE_URL}/pasien/${patientId}`);
+    return response.data;
   },
 
   create: async (data) => {
-    try {
-      const response = await apiService.post('/rekam-medis', data);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.post(BASE_URL, data);
+    return response.data;
   },
 
   update: async (id, data) => {
-    try {
-      const response = await apiService.put(`/rekam-medis/${id}`, data);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.put(`${BASE_URL}/${id}`, data);
+    return response.data;
   },
 
   delete: async (id) => {
-    try {
-      const response = await apiService.delete(`/rekam-medis/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.delete(`${BASE_URL}/${id}`);
+    return response.data;
   },
 
   addDiagnosis: async (recordId, diagnosisData) => {
-    try {
-      const response = await apiService.post(`/rekam-medis/${recordId}/diagnosis`, diagnosisData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.post(
+      `${BASE_URL}/${recordId}/diagnosis`,
+      diagnosisData
+    );
+    return response.data;
   },
 
   addTreatment: async (recordId, treatmentData) => {
-    try {
-      const response = await apiService.post(`/rekam-medis/${recordId}/treatment`, treatmentData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await apiService.post(
+      `${BASE_URL}/${recordId}/treatment`,
+      treatmentData
+    );
+    return response.data;
   },
 
   export: async (patientId, format = 'pdf') => {
-    try {
-      const response = await apiService.get(`/rekam-medis/pasien/${patientId}/export`, {
+    const response = await apiService.get(
+      `${BASE_URL}/pasien/${patientId}/export`,
+      {
         params: { format },
         responseType: 'blob',
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+      }
+    );
+    return response.data;
   },
 };
 

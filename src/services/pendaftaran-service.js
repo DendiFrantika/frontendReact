@@ -3,7 +3,7 @@ import apiService from './api-service';
 const pendaftaranService = {
   getAll: async () => {
     try {
-      const response = await apiService.get('/pendaftaran');
+      const response = await apiService.get('/admin/pendaftaran');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
