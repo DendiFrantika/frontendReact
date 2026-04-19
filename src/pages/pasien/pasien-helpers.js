@@ -126,5 +126,10 @@ export function normalizeSchedule(s, idx = 0) {
   const range =
     start && end ? `${start} – ${end}` : pick(start, end, s.label, s.slot) ?? '—';
   const label = day ? `${day} · ${range}` : range;
-  return { id: s.id ?? `s-${idx}`, label };
+  return {id: s.id ?? `s-${idx}`,
+    label,
+    // ✅ Tambahkan field ini
+    tanggal: pick(s.tanggal, s.tanggal_pendaftaran, s.date, s.visit_date) ?? undefined,
+    jam: pick(s.jam, s.jam_kunjungan, s.jam_mulai, s.start_time, s.startTime) ?? undefined,
+  };
 }

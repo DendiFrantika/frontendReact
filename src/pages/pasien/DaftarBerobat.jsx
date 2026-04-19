@@ -6,10 +6,29 @@ import '../admin/Dashboard.css';
 import './pasien-pages.css';
 import { unwrapList, normalizeDoctor, normalizeSchedule } from './pasien-helpers';
 
+function getNextDateForDay(namaHari) {
+  const hariMap = {
+    'minggu': 0, 'senin': 1, 'selasa': 2, 'rabu': 3,
+    'kamis': 4, 'jumat': 5, 'sabtu': 6,
+  };
+  const target = hariMap[namaHari?.toLowerCase()];
+  if (target === undefined) return null;
+
+  const today = new Date();
+  const todayDay = today.getDay();
+  let diff = target - todayDay;
+  if (diff <= 0) diff += 7;
+
+  const result = new Date(today);
+  result.setDate(today.getDate() + diff);
+  return result.toISOString().split('T')[0];
+}
+
 export default function DaftarBerobat() {
   const [doctors, setDoctors] = useState([]);
   const [schedules, setSchedules] = useState([]);
-  const [formData, setFormData] = useState({ doctorId: '', scheduleId: '' });
+  const [pasienId, setPasienId] = useState(null); // ✅ state pasienId
+  const [formData, setFormData] = useState({ doctorId: '', scheduleId: '', keluhan: '' });
   const [saving, setSaving] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
@@ -36,6 +55,18 @@ export default function DaftarBerobat() {
   }, []);
 
   useEffect(() => {
+    const fetchPasienId = async () => {
+      try {
+        const res = await axiosInstance.get('/pasien/profile');
+        const data = res.data?.data ?? res.data;
+        console.log('Profile response:', data); // ← lihat struktur, tentukan field yang benar
+        const id = data?.id ?? data?.pasien_id ?? null;
+        setPasienId(id);
+      } catch (err) {
+        console.error('Gagal ambil pasien id:', err);
+      }
+    };
+    fetchPasienId();
     loadDoctors();
   }, [loadDoctors]);
 
@@ -83,54 +114,77 @@ export default function DaftarBerobat() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setBanner(null);
-  setSaving(true);
+    e.preventDefault();
+    setBanner(null);
+    setSaving(true);
 
-  try {
-    const dokter_id = Number(formData.doctorId);
-    const jadwal_id = Number(formData.scheduleId);
+    let payload = null;
 
-    const selectedSchedule = schedules.find(
-      (s) => Number(s.id) === jadwal_id
-    );
+    try {
+      const jadwal_id = Number(formData.scheduleId);
 
-    if (!selectedSchedule) {
-      throw new Error('Jadwal tidak ditemukan');
+      const selectedSchedule = schedules.find(
+        (s) => Number(s.id) === jadwal_id
+      );
+
+      if (!selectedSchedule) {
+        throw new Error('Jadwal tidak ditemukan');
+      }
+
+      if (!pasienId) {
+        setBanner({ type: 'error', text: 'Data pasien tidak ditemukan. Silakan login ulang.' });
+        setSaving(false);
+        return;
+      }
+
+      const namaHari = selectedSchedule.label.split('·')[0].trim();
+      const tanggalOtomatis = getNextDateForDay(namaHari);
+      const jamFormatted = selectedSchedule.jam?.slice(0, 5);
+
+      payload = {
+        pasien_id: pasienId,
+        dokter_id: Number(formData.doctorId),
+        jadwal_dokter_id: jadwal_id,
+        tanggal_pendaftaran: tanggalOtomatis,
+        jam_kunjungan: jamFormatted,
+        keluhan: formData.keluhan || 'Konsultasi umum',
+      };
+
+      if (!payload.tanggal_pendaftaran || !payload.jam_kunjungan) {
+        setBanner({
+          type: 'error',
+          text: 'Tidak dapat menentukan tanggal/jam jadwal. Hubungi admin.',
+        });
+        setSaving(false);
+        return;
+      }
+
+      console.log('Payload:', payload);
+
+      await axiosInstance.post('/pasien/daftar', payload);
+
+      setBanner({
+        type: 'success',
+        text: 'Pendaftaran berhasil. Lihat antrian di menu Antrian.',
+      });
+
+      setFormData({ doctorId: '', scheduleId: '', keluhan: '' });
+      setSchedules([]);
+
+    } catch (err) {
+      console.error('ERROR detail:', JSON.stringify(err.response?.data, null, 2));
+      console.error('Payload yang dikirim:', payload);
+      setBanner({
+        type: 'error',
+        text:
+          err.response?.data?.message ||
+          JSON.stringify(err.response?.data?.errors) ||
+          'Pendaftaran gagal',
+      });
+    } finally {
+      setSaving(false);
     }
-
-    const payload = {
-      dokter_id,
-      tanggal_pendaftaran: selectedSchedule.tanggal, // ⬅️ penting
-      jam_kunjungan: selectedSchedule.jam,           // ⬅️ penting
-      keluhan: 'Konsultasi umum', // bisa kamu ganti pakai input form nanti
-    };
-
-    console.log('Payload:', payload);
-
-    await axiosInstance.post('/pasien/daftar', payload);
-
-    setBanner({
-      type: 'success',
-      text: 'Pendaftaran berhasil. Lihat antrian di menu Antrian.',
-    });
-
-    setFormData({ doctorId: '', scheduleId: '' });
-    setSchedules([]);
-
-  } catch (err) {
-    console.error('ERROR VALIDASI:', err.response?.data);
-    setBanner({
-      type: 'error',
-      text:
-        err.response?.data?.message ||
-        JSON.stringify(err.response?.data?.errors) ||
-        'Pendaftaran gagal',
-    });
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   return (
     <div className="admin-layout">
@@ -209,6 +263,19 @@ export default function DaftarBerobat() {
               </select>
             </div>
 
+            <div className="form-group">
+              <label htmlFor="keluhan">Keluhan</label>
+              <input
+                id="keluhan"
+                name="keluhan"
+                type="text"
+                placeholder="Konsultasi umum"
+                value={formData.keluhan}
+                onChange={handleChange}
+                disabled={saving}
+              />
+            </div>
+
             <div className="form-actions">
               <button
                 type="submit"
@@ -226,6 +293,6 @@ export default function DaftarBerobat() {
           </form>
         )}
       </div>
-    </div> 
+    </div>
   );
 }
