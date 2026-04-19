@@ -226,6 +226,6 @@ export default function DaftarBerobat() {
           </form>
         )}
       </div>
-    </div>
+    </div> 
   );
 }

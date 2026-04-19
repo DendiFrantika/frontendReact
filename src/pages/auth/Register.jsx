@@ -9,6 +9,8 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    no_identitas: '',
+    tanggal_lahir: '',
     password: '',
     confirmPassword: '',
   });
@@ -56,6 +58,18 @@ const Register = () => {
       newErrors.email = 'Email tidak valid';
     }
 
+    // Validasi No Identitas
+    if (!formData.no_identitas) {
+      newErrors.no_identitas = 'No identitas wajib diisi';
+    } else if (!/^\d+$/.test(formData.no_identitas)) {
+      newErrors.no_identitas = 'No identitas harus berupa angka';
+    }
+
+    // Validasi Tanggal Lahir
+    if (!formData.tanggal_lahir) {
+      newErrors.tanggal_lahir = 'Tanggal lahir wajib diisi';
+    }
+
     if (!formData.password) {
       newErrors.password = 'Password wajib diisi';
     } else if (formData.password.length < 6) {
@@ -88,6 +102,8 @@ const Register = () => {
       const response = await axiosInstance.post('/auth/register', {
         name: formData.name,
         email: formData.email,
+        no_identitas: formData.no_identitas,
+        tanggal_lahir: formData.tanggal_lahir,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
       });
@@ -114,9 +130,7 @@ const Register = () => {
   };
 
   return (
-    <main
-      className={`login-container${registerBgUrl ? ' login-container--bg-image' : ''}`}
-    >
+    <main className={`login-container${registerBgUrl ? ' login-container--bg-image' : ''}`}>
       <div
         className={`login-bg${registerBgUrl ? ' login-bg--image' : ''}`}
         style={registerBgStyle}
@@ -128,18 +142,9 @@ const Register = () => {
         <span className="login-shape login-shape--3" />
       </div>
 
-      <div
-        className="login-toast-region"
-        role="region"
-        aria-label="Notifikasi"
-        aria-live="polite"
-      >
+      <div className="login-toast-region" role="region" aria-label="Notifikasi" aria-live="polite">
         {toasts.map((t) => (
-          <div
-            key={t.id}
-            className={`login-toast login-toast--${t.variant}`}
-            role="status"
-          >
+          <div key={t.id} className={`login-toast login-toast--${t.variant}`} role="status">
             {t.message}
           </div>
         ))}
@@ -158,10 +163,9 @@ const Register = () => {
         )}
 
         <form onSubmit={handleSubmit} className="login-form register-form-tight" noValidate>
+          {/* Nama Lengkap */}
           <div className="form-group">
-            <label htmlFor="name" className="form-label">
-              Nama lengkap
-            </label>
+            <label htmlFor="name" className="form-label">Nama lengkap *</label>
             <input
               type="text"
               id="name"
@@ -171,15 +175,13 @@ const Register = () => {
               className={`form-input ${errors.name ? 'input-error' : ''}`}
               placeholder="Masukkan nama lengkap"
               disabled={loading}
-              autoComplete="name"
             />
             {errors.name && <span className="error-message">{errors.name}</span>}
           </div>
 
+          {/* Email */}
           <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Email
-            </label>
+            <label htmlFor="email" className="form-label">Email *</label>
             <input
               type="email"
               id="email"
@@ -189,15 +191,44 @@ const Register = () => {
               className={`form-input ${errors.email ? 'input-error' : ''}`}
               placeholder="nama@email.com"
               disabled={loading}
-              autoComplete="email"
             />
             {errors.email && <span className="error-message">{errors.email}</span>}
           </div>
 
+          {/* No Identitas */}
           <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              Password
-            </label>
+            <label htmlFor="no_identitas" className="form-label">No Identitas *</label>
+            <input
+              type="text"
+              id="no_identitas"
+              name="no_identitas"
+              value={formData.no_identitas}
+              onChange={handleChange}
+              className={`form-input ${errors.no_identitas ? 'input-error' : ''}`}
+              placeholder="Masukkan nomor identitas"
+              disabled={loading}
+            />
+            {errors.no_identitas && <span className="error-message">{errors.no_identitas}</span>}
+          </div>
+
+          {/* Tanggal Lahir */}
+          <div className="form-group">
+            <label htmlFor="tanggal_lahir" className="form-label">Tanggal Lahir *</label>
+            <input
+              type="date"
+              id="tanggal_lahir"
+              name="tanggal_lahir"
+              value={formData.tanggal_lahir}
+              onChange={handleChange}
+              className={`form-input ${errors.tanggal_lahir ? 'input-error' : ''}`}
+              disabled={loading}
+            />
+            {errors.tanggal_lahir && <span className="error-message">{errors.tanggal_lahir}</span>}
+          </div>
+
+          {/* Password */}
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Password *</label>
             <div className="login-password-wrap">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -208,44 +239,32 @@ const Register = () => {
                 className={`form-input form-input--with-toggle ${errors.password ? 'input-error' : ''}`}
                 placeholder="Minimal 6 karakter"
                 disabled={loading}
-                autoComplete="new-password"
               />
               <button
                 type="button"
                 className="login-password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
-                aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
               >
                 {showPassword ? '🙈' : '👁️'}
               </button>
             </div>
-            {errors.password && (
-              <span className="error-message">{errors.password}</span>
-            )}
+            {errors.password && <span className="error-message">{errors.password}</span>}
+            
             <div className="password-requirements">
-              <small>Persyaratan password</small>
+              <small>PERSYARATAN PASSWORD</small>
               <ul>
-                <li className={formData.password.length >= 6 ? 'valid' : ''}>
-                  Minimal 6 karakter
-                </li>
-                <li className={/[a-z]/.test(formData.password) ? 'valid' : ''}>
-                  Huruf kecil
-                </li>
-                <li className={/[A-Z]/.test(formData.password) ? 'valid' : ''}>
-                  Huruf besar
-                </li>
-                <li className={/\d/.test(formData.password) ? 'valid' : ''}>
-                  Angka
-                </li>
+                <li className={formData.password.length >= 6 ? 'valid' : ''}>Minimal 6 karakter</li>
+                <li className={/[a-z]/.test(formData.password) ? 'valid' : ''}>Huruf kecil</li>
+                <li className={/[A-Z]/.test(formData.password) ? 'valid' : ''}>Huruf besar</li>
+                <li className={/\d/.test(formData.password) ? 'valid' : ''}>Angka</li>
               </ul>
             </div>
           </div>
 
+          {/* Konfirmasi Password */}
           <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">
-              Konfirmasi password
-            </label>
+            <label htmlFor="confirmPassword" className="form-label">Konfirmasi password *</label>
             <div className="login-password-wrap">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -256,47 +275,28 @@ const Register = () => {
                 className={`form-input form-input--with-toggle ${errors.confirmPassword ? 'input-error' : ''}`}
                 placeholder="Ulangi password"
                 disabled={loading}
-                autoComplete="new-password"
               />
               <button
                 type="button"
                 className="login-password-toggle"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 disabled={loading}
-                aria-label={
-                  showConfirmPassword
-                    ? 'Sembunyikan konfirmasi password'
-                    : 'Tampilkan konfirmasi password'
-                }
               >
                 {showConfirmPassword ? '🙈' : '👁️'}
               </button>
             </div>
-            {errors.confirmPassword && (
-              <span className="error-message">{errors.confirmPassword}</span>
-            )}
+            {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
           </div>
 
-          <button
-            type="submit"
-            className="login-button register-submit"
-            disabled={loading}
-          >
+          <button type="submit" className="login-button register-submit" disabled={loading}>
             {loading ? 'Memproses…' : 'Daftar'}
           </button>
         </form>
 
         <div className="login-footer register-footer-stack">
-          <p>
-            Sudah punya akun?{' '}
-            <Link to="/login" className="register-link">
-              Masuk
-            </Link>
-          </p>
+          <p>Sudah punya akun? <Link to="/login" className="register-link">Masuk</Link></p>
           <p className="register-footer-secondary">
-            <Link to="/" className="auth-back-home">
-              ← Kembali ke beranda
-            </Link>
+            <Link to="/" className="auth-back-home">← Kembali ke beranda</Link>
           </p>
         </div>
       </div>
