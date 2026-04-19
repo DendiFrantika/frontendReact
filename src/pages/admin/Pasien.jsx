@@ -21,20 +21,22 @@ const emptyForm = () => ({
   no_telepon: '',
   email: '',
   golongan_darah: '',
+  no_identitas: '',
+  alamat: '',
 });
 
 function buildPasienPayload(form) {
   const payload = {
     nama: String(form.nama || '').trim(),
     tanggal_lahir: form.tanggal_lahir,
-    jenis_kelamin: form.jenis_kelamin,
+    // Konversi L/P → Laki-laki/Perempuan sesuai validasi backend
+    jenis_kelamin: form.jenis_kelamin === 'L' ? 'Laki-laki' : form.jenis_kelamin === 'P' ? 'Perempuan' : form.jenis_kelamin,
+    no_telepon: String(form.no_telepon || '').trim(),
+    no_identitas: String(form.no_identitas || '').trim(),
+    alamat: String(form.alamat || '').trim(),
   };
-  const tel = String(form.no_telepon || '').trim();
-  if (tel) payload.no_telepon = tel;
-  const em = String(form.email || '').trim();
-  if (em) payload.email = em;
-  const gd = String(form.golongan_darah || '').trim();
-  if (gd) payload.golongan_darah = gd;
+  if (form.email?.trim()) payload.email = form.email.trim();
+  if (form.golongan_darah?.trim()) payload.golongan_darah = String(form.golongan_darah).toUpperCase().trim();
   return payload;
 }
 
@@ -72,7 +74,6 @@ export default function Pasien() {
     try {
       const res = await requestWithFallback([
         { method: 'get', url: '/admin/pasien', params },
-        { method: 'get', url: '/pasien', params },
       ]);
       setPatients(unpackCollection(res.data));
     } catch (err) {
@@ -93,7 +94,7 @@ export default function Pasien() {
     let age = today.getFullYear() - lahir.getFullYear();
     const m = today.getMonth() - lahir.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < lahir.getDate())) {
-        age--;
+      age--;
     }
     return age;
   };
@@ -121,23 +122,17 @@ export default function Pasien() {
     e.preventDefault();
     setSubmitError('');
     setErrors({});
-    const clientErrors = validatePasienForm(form);
-    if (Object.keys(clientErrors).length > 0) {
-      setErrors(clientErrors);
-      return;
-    }
+
     const payload = buildPasienPayload(form);
     setSubmitLoading(true);
     try {
       if (editId) {
         await requestWithFallback([
           { method: 'put', url: `/admin/pasien/${editId}`, data: payload },
-          { method: 'put', url: `/pasien/${editId}`, data: payload },
         ]);
       } else {
         await requestWithFallback([
           { method: 'post', url: '/admin/pasien', data: payload },
-          { method: 'post', url: '/pasien', data: payload },
         ]);
       }
       await fetchPatients();
@@ -145,7 +140,7 @@ export default function Pasien() {
       setNotice(editId ? 'Data pasien berhasil diperbarui.' : 'Data pasien berhasil ditambahkan.');
       resetForm();
     } catch (err) {
-      console.error(err.response?.data ?? err);
+      console.error('Error:', err.response?.data);
       const fieldErrors = normalizeFieldErrors(err);
       if (Object.keys(fieldErrors).length > 0) setErrors(fieldErrors);
       else setSubmitError(normalizeErrorMessage(err, 'Gagal menyimpan data pasien.'));
@@ -156,13 +151,17 @@ export default function Pasien() {
 
   const handleEdit = (p) => {
     const formattedDate = p.tanggal_lahir ? String(p.tanggal_lahir).substring(0, 10) : '';
+    // Konversi balik Laki-laki/Perempuan → L/P untuk form select
+    const jk = p.jenis_kelamin === 'Laki-laki' ? 'L' : p.jenis_kelamin === 'Perempuan' ? 'P' : normalizeJenisKelaminForForm(p.jenis_kelamin);
     setForm({
       nama: p.nama ?? '',
       tanggal_lahir: formattedDate,
-      jenis_kelamin: normalizeJenisKelaminForForm(p.jenis_kelamin),
+      jenis_kelamin: jk,
       no_telepon: p.no_telepon ?? '',
       email: p.email ?? '',
       golongan_darah: p.golongan_darah ? String(p.golongan_darah).toUpperCase() : '',
+      no_identitas: p.no_identitas ?? '',
+      alamat: p.alamat ?? '',
     });
     setErrors({});
     setSubmitError('');
@@ -176,7 +175,6 @@ export default function Pasien() {
     try {
       await requestWithFallback([
         { method: 'delete', url: `/admin/pasien/${deleteTarget.id}` },
-        { method: 'delete', url: `/pasien/${deleteTarget.id}` },
       ]);
       await fetchPatients();
       setDeleteTarget(null);
@@ -216,8 +214,8 @@ export default function Pasien() {
               onChange={(e) => setFilterJk(e.target.value)}
             >
               <option value="">Semua</option>
-              <option value="L">Laki-laki</option>
-              <option value="P">Perempuan</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
             </select>
           </div>
           <div className="pasien-toolbar-field">
@@ -259,35 +257,36 @@ export default function Pasien() {
               </div>
 
               <div className="form-group">
+                <label>No. Identitas (NIK/KTP)</label>
+                <input name="no_identitas" placeholder="16 digit NIK" value={form.no_identitas} onChange={handleChange} required maxLength={255} />
+                {errors.no_identitas ? <small className="form-error">{errors.no_identitas[0]}</small> : null}
+              </div>
+
+              <div className="form-group">
                 <label>Tanggal Lahir</label>
-                <input 
-                  type="date" 
-                  name="tanggal_lahir" 
-                  value={form.tanggal_lahir} 
-                  onChange={handleChange} 
-                  required 
-                />
+                <input type="date" name="tanggal_lahir" value={form.tanggal_lahir} onChange={handleChange} required />
                 {errors.tanggal_lahir ? <small className="form-error">{errors.tanggal_lahir[0]}</small> : null}
               </div>
 
               <div className="form-group">
                 <label>Jenis Kelamin</label>
-                <select 
-                  name="jenis_kelamin" 
-                  value={form.jenis_kelamin} 
-                  onChange={handleChange} 
-                  required
-                >
+                <select name="jenis_kelamin" value={form.jenis_kelamin} onChange={handleChange} required>
                   <option value="">-- Pilih --</option>
-                  <option value="L">Laki-laki (L)</option>
-                  <option value="P">Perempuan (P)</option>
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
                 </select>
                 {errors.jenis_kelamin ? <small className="form-error">{errors.jenis_kelamin[0]}</small> : null}
               </div>
 
               <div className="form-group">
+                <label>Alamat</label>
+                <textarea name="alamat" placeholder="Alamat lengkap" value={form.alamat} onChange={handleChange} required maxLength={2000} rows={3} />
+                {errors.alamat ? <small className="form-error">{errors.alamat[0]}</small> : null}
+              </div>
+
+              <div className="form-group">
                 <label>No Telepon</label>
-                <input name="no_telepon" placeholder="0812..." value={form.no_telepon} onChange={handleChange} maxLength={20} />
+                <input name="no_telepon" placeholder="0812..." value={form.no_telepon} onChange={handleChange} required maxLength={20} />
                 {errors.no_telepon ? <small className="form-error">{errors.no_telepon[0]}</small> : null}
               </div>
 
