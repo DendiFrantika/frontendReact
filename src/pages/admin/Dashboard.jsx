@@ -73,7 +73,11 @@ const AdminDashboard = () => {
           { method: 'get', url: '/dashboard/recent-activities' },
           { method: 'get', url: '/admin/aktivitas/recent' },
         ]);
-        setRecentActivities(activitiesRes.data || []);
+        setRecentActivities(
+  (activitiesRes.data || [])
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 3)
+);
       } catch (e) {
         console.warn('Recent activities endpoint not available, using empty array');
         setRecentActivities([]);
@@ -149,16 +153,6 @@ const AdminDashboard = () => {
     { icon: '🩺', label: 'Laporan Rekam Medis', link: '/admin/laporan/rekam-medis', description: 'Analisis rekam medis pasien.' },
     { icon: '👨‍⚕️', label: 'Laporan Dokter', link: '/admin/laporan/dokter', description: 'Statistik pasien per dokter.' },
     { icon: '🗓️', label: 'Laporan Pendaftaran', link: '/admin/laporan/pendaftaran', description: 'Laporan status pendaftaran.' },
-  ];
-
-  const quickActions = [
-    { icon: '🔀', label: 'Alur Admin–Kasir', link: '/admin/alur-kerja' },
-    { icon: '👥', label: 'Manajemen Pasien', link: '/admin/pasien' },
-    { icon: '👨‍⚕️', label: 'Kelola Dokter', link: '/admin/dokter' },
-    { icon: '📅', label: 'Jadwal', link: '/admin/jadwal' },
-    { icon: '📊', label: 'Laporan', link: '/admin/laporan' },
-    { icon: '⚙️', label: 'Pengaturan', link: '/admin/pengaturan' },
-    { icon: '📈', label: 'Analytics', link: '/admin/analytics' },
   ];
 
   // Pie chart data handled via state
@@ -261,19 +255,6 @@ const AdminDashboard = () => {
                   <p className="stat-value">{stats.totalLayanan}</p>
                   <small>{serviceData.length > 0 ? `${serviceData.length} kategori` : 'Data terbaru'}</small>
                 </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="dashboard-section">
-              <h2>Quick Actions</h2>
-              <div className="quick-actions">
-                {quickActions.map((action) => (
-                  <Link key={action.label} to={action.link} className="action-btn">
-                    <div className="action-icon">{action.icon}</div>
-                    <span>{action.label}</span>
-                  </Link>
-                ))}
               </div>
             </div>
 

@@ -1,0 +1,30 @@
+.jadwal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.toggle button {
+  margin-right: 10px;
+}
+
+.toggle .active {
+  background: #3498db;
+  color: white;
+}
