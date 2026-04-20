@@ -54,7 +54,9 @@ export function ClinicContact() {
                 Email
               </h3>
               <p style={{color: '#6b7280', fontSize: '0.875rem'}}>
-                info@kliniksejahtera.com
+               <a href="mailto:[EMAIL_ADDRESS]">
+                 dinda
+            </a>
               </p>
             </div>
           </div>
