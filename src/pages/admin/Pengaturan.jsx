@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import './Pengaturan.css';
 
 export default function Pengaturan() {
   const { user, logout } = useAuth();
@@ -40,13 +41,11 @@ export default function Pengaturan() {
       });
 
       showMessage('success', 'Password berhasil diganti!');
-
       setPasswordData({
         current_password: '',
         new_password: '',
         new_password_confirmation: '',
       });
-
     } catch (err) {
       showMessage(
         'error',
@@ -61,8 +60,7 @@ export default function Pengaturan() {
 
   // ===== LOGOUT ALL =====
   const handleLogoutAll = async () => {
-    if (!window.confirm('Yakin logout semua perangkat?')) return;
-
+    if (!window.confirm('Yakin ingin logout dari semua perangkat?')) return;
     try {
       await axiosInstance.post('/auth/logout');
       logout();
@@ -71,162 +69,179 @@ export default function Pengaturan() {
     }
   };
 
+  const navItems = [
+    { key: 'profile',  icon: '👤', label: 'Profil' },
+    { key: 'security', icon: '🔒', label: 'Keamanan' },
+    { key: 'danger',   icon: '⚠️',  label: 'Zona Bahaya' },
+  ];
+
   return (
     <AdminLayout title="Pengaturan">
-      <div className="container py-4">
+      <div className="pg-wrapper">
 
         {/* HEADER */}
-        <div className="mb-4">
-          <h3 className="fw-bold">⚙️ Pengaturan Akun</h3>
-          <small className="text-muted">
-            Kelola profil dan keamanan akun
-          </small>
-        </div>
-
-        {/* TAB */}
-        <div className="d-flex gap-2 mb-4 flex-wrap">
-          {[
-            { key: 'profile', label: '👤 Profil' },
-            { key: 'security', label: '🔒 Keamanan' },
-            { key: 'danger', label: '⚠️ Zona Bahaya' },
-          ].map(tab => (
-            <button
-              key={tab.key}
-              className={`btn ${
-                activeTab === tab.key
-                  ? 'btn-primary'
-                  : tab.key === 'danger'
-                  ? 'btn-outline-danger'
-                  : 'btn-outline-secondary'
-              }`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* ALERT */}
-        {message && (
-          <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'}`}>
-            {message.text}
+        <div className="pg-header">
+          <div className="pg-header-inner">
+            <div className="pg-header-icon">⚙️</div>
+            <div>
+              <h2>Pengaturan Akun</h2>
+              <p>Kelola profil dan keamanan akun Anda</p>
+            </div>
           </div>
-        )}
+        </div>
 
-        <div className="card shadow-sm border-0 rounded-4">
-          <div className="card-body p-4">
+        {/* LAYOUT */}
+        <div className="pg-layout">
 
-            {/* ================= PROFILE ================= */}
+          {/* SIDEBAR NAV */}
+          <nav className="pg-nav">
+            {navItems.map(tab => (
+              <button
+                key={tab.key}
+                className={`pg-nav-btn ${activeTab === tab.key ? 'active' : ''} ${tab.key === 'danger' ? 'danger' : ''}`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                <span className="pg-nav-icon">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* MAIN CARD */}
+          <div className="pg-card">
+
+            {/* ALERT */}
+            {message && (
+              <div className={`pg-alert ${message.type}`}>
+                <span>{message.type === 'success' ? '✅' : '❌'}</span>
+                {message.text}
+              </div>
+            )}
+
+            {/* ===== PROFILE ===== */}
             {activeTab === 'profile' && (
-              <>
-                <h5 className="fw-bold mb-3">Informasi Akun</h5>
+              <div key="profile">
+                <h3 className="pg-section-title">
+                  👤 Informasi Akun
+                </h3>
 
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <div className="border rounded p-3 bg-light">
-                      <small className="text-muted">Nama</small>
-                      <div className="fw-semibold">{user?.name || '-'}</div>
-                    </div>
+                <div className="pg-info-grid">
+                  <div className="pg-info-item">
+                    <div className="pg-info-label">Nama Lengkap</div>
+                    <div className="pg-info-value">{user?.name || '—'}</div>
                   </div>
 
-                  <div className="col-md-6">
-                    <div className="border rounded p-3 bg-light">
-                      <small className="text-muted">Email</small>
-                      <div className="fw-semibold">{user?.email || '-'}</div>
-                    </div>
+                  <div className="pg-info-item">
+                    <div className="pg-info-label">Email</div>
+                    <div className="pg-info-value">{user?.email || '—'}</div>
                   </div>
 
-                  <div className="col-md-6">
-                    <div className="border rounded p-3 bg-light">
-                      <small className="text-muted">Role</small>
-                      <div className="fw-semibold text-capitalize">
+                  <div className="pg-info-item">
+                    <div className="pg-info-label">Role</div>
+                    <div className="pg-info-value">
+                      <span className="pg-badge">
                         {user?.role || 'admin'}
-                      </div>
+                      </span>
                     </div>
                   </div>
 
-                  <div className="col-md-6">
-                    <div className="border rounded p-3 bg-light">
-                      <small className="text-muted">Terdaftar</small>
-                      <div className="fw-semibold">
-                        {user?.created_at
-                          ? new Date(user.created_at).toLocaleDateString('id-ID')
-                          : '-'}
-                      </div>
+                  <div className="pg-info-item">
+                    <div className="pg-info-label">Terdaftar Sejak</div>
+                    <div className="pg-info-value">
+                      {user?.created_at
+                        ? new Date(user.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric', month: 'long', year: 'numeric'
+                          })
+                        : '—'}
                     </div>
                   </div>
                 </div>
-              </>
+              </div>
             )}
 
-            {/* ================= SECURITY ================= */}
+            {/* ===== SECURITY ===== */}
             {activeTab === 'security' && (
-              <form onSubmit={handlePasswordUpdate} style={{ maxWidth: 500 }}>
-                <h5 className="fw-bold mb-3">Ganti Password</h5>
+              <div key="security">
+                <h3 className="pg-section-title">
+                  🔒 Ganti Password
+                </h3>
 
-                <div className="mb-3">
-                  <label>Password Lama</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    value={passwordData.current_password}
-                    onChange={(e) =>
-                      setPasswordData({ ...passwordData, current_password: e.target.value })
-                    }
-                  />
-                </div>
+                <form className="pg-form" onSubmit={handlePasswordUpdate}>
+                  <div className="pg-field">
+                    <label className="pg-label">Password Lama</label>
+                    <input
+                      type="password"
+                      className="pg-input"
+                      placeholder="Masukkan password lama"
+                      value={passwordData.current_password}
+                      onChange={(e) =>
+                        setPasswordData({ ...passwordData, current_password: e.target.value })
+                      }
+                    />
+                  </div>
 
-                <div className="mb-3">
-                  <label>Password Baru</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    value={passwordData.new_password}
-                    onChange={(e) =>
-                      setPasswordData({ ...passwordData, new_password: e.target.value })
-                    }
-                  />
-                </div>
+                  <div className="pg-field">
+                    <label className="pg-label">Password Baru</label>
+                    <input
+                      type="password"
+                      className="pg-input"
+                      placeholder="Minimal 8 karakter"
+                      value={passwordData.new_password}
+                      onChange={(e) =>
+                        setPasswordData({ ...passwordData, new_password: e.target.value })
+                      }
+                    />
+                  </div>
 
-                <div className="mb-3">
-                  <label>Konfirmasi Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    value={passwordData.new_password_confirmation}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        new_password_confirmation: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+                  <div className="pg-field">
+                    <label className="pg-label">Konfirmasi Password Baru</label>
+                    <input
+                      type="password"
+                      className="pg-input"
+                      placeholder="Ulangi password baru"
+                      value={passwordData.new_password_confirmation}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          new_password_confirmation: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                <button className="btn btn-warning">
-                  {loading ? 'Memproses...' : '🔐 Update Password'}
-                </button>
-              </form>
+                  <hr className="pg-divider" />
+
+                  <button
+                    type="submit"
+                    className="pg-btn pg-btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? '⏳ Memproses...' : '🔐 Update Password'}
+                  </button>
+                </form>
+              </div>
             )}
 
-            {/* ================= DANGER ================= */}
+            {/* ===== DANGER ===== */}
             {activeTab === 'danger' && (
-              <div>
-                <h5 className="fw-bold text-danger mb-3">Zona Bahaya</h5>
+              <div key="danger">
+                <h3 className="pg-section-title" style={{ color: 'var(--color-danger)' }}>
+                  ⚠️ Zona Bahaya
+                </h3>
 
-                <div className="border border-danger rounded p-3 d-flex justify-content-between align-items-center">
+                <div className="pg-danger-card">
                   <div>
-                    <strong>Logout Semua Perangkat</strong>
-                    <div className="text-muted small">
-                      Semua sesi akan dihentikan
+                    <div className="pg-danger-title">Logout Semua Perangkat</div>
+                    <div className="pg-danger-desc">
+                      Semua sesi aktif akan segera dihentikan
                     </div>
                   </div>
 
                   <button
-                    className="btn btn-danger"
+                    className="pg-btn pg-btn-danger"
                     onClick={handleLogoutAll}
                   >
-                    Logout
+                    🚪 Logout Semua
                   </button>
                 </div>
               </div>
@@ -234,7 +249,6 @@ export default function Pengaturan() {
 
           </div>
         </div>
-
       </div>
     </AdminLayout>
   );
