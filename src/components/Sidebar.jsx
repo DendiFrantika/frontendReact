@@ -23,12 +23,9 @@ const Sidebar = () => {
         { path: '/admin/alur-kerja', label: 'Alur kerja', icon: '🔀' },
         { path: '/admin/pasien', label: 'Pasien', icon: '👥' },
         { path: '/admin/dokter', label: 'Dokter', icon: '👨‍⚕️' },
-        { path: '/admin/jadwal', label: 'Jadwal Kerja', icon: '📅' },
         { path: '/admin/pendaftaran', label: 'Pendaftaran', icon: '📋' },
         { path: '/admin/rekam-medis', label: 'Rekam Medis', icon: '📄' },
-        { path: '/admin/laporan', label: 'Laporan', icon: '📈' },
-        { path: '/admin/aktivitas', label: 'Aktivitas', icon: '📝' },
-        { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
+        // { path: '/admin/laporan', label: 'Laporan', icon: '📈' },
         { path: '/admin/pengaturan', label: 'Pengaturan', icon: '⚙️' },
       ];
     } else if (user?.role === 'pasien') {

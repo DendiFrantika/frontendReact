@@ -4,16 +4,11 @@ import axiosInstance from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Pengaturan() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
-
-  const [profileData, setProfileData] = useState({
-    name: user?.name ?? '',
-    email: user?.email ?? '',
-  });
 
   const [passwordData, setPasswordData] = useState({
     current_password: '',
@@ -21,74 +16,13 @@ export default function Pengaturan() {
     new_password_confirmation: '',
   });
 
-  // ===== CSS LANGSUNG =====
-  const styles = `
-    .page-bg {
-      background-color: #f8f9fa;
-      min-height: 100vh;
-    }
-
-    .card-custom {
-      border-radius: 12px;
-      transition: 0.3s;
-    }
-
-    .card-custom:hover {
-      transform: translateY(-3px);
-    }
-
-    .form-container {
-      max-width: 600px;
-    }
-
-    .nav-pills .nav-link {
-      border-radius: 8px;
-      font-weight: 500;
-      padding: 8px 16px;
-    }
-
-    .nav-pills .nav-link.active {
-      background-color: #0d6efd;
-    }
-
-    .danger-box {
-      border: 1px solid #dc3545;
-      border-radius: 10px;
-      padding: 15px;
-    }
-  `;
-
   // ===== HELPER =====
   const showMessage = (type, text) => {
     setMessage({ type, text });
+    setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleChangeProfile = (e) => {
-    const { name, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleChangePassword = (e) => {
-    const { name, value } = e.target;
-    setPasswordData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // ===== API =====
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage(null);
-
-    try {
-      await axiosInstance.put('/admin/update-profile', profileData);
-      showMessage('success', 'Profil berhasil diperbarui!');
-    } catch (err) {
-      showMessage('error', err.response?.data?.message || 'Gagal memperbarui profil.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ===== UPDATE PASSWORD =====
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
 
@@ -97,201 +31,211 @@ export default function Pengaturan() {
     }
 
     setLoading(true);
-    setMessage(null);
 
     try {
-      await axiosInstance.put('/admin/update-password', passwordData);
+      await axiosInstance.post('/auth/change-password', {
+        current_password: passwordData.current_password,
+        password: passwordData.new_password,
+        password_confirmation: passwordData.new_password_confirmation,
+      });
+
       showMessage('success', 'Password berhasil diganti!');
+
       setPasswordData({
         current_password: '',
         new_password: '',
         new_password_confirmation: '',
       });
+
     } catch (err) {
-      showMessage('error', err.response?.data?.message || 'Gagal mengganti password.');
+      showMessage(
+        'error',
+        err.response?.data?.message ||
+        JSON.stringify(err.response?.data?.errors) ||
+        'Gagal mengganti password'
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // ===== LOGOUT ALL =====
+  const handleLogoutAll = async () => {
+    if (!window.confirm('Yakin logout semua perangkat?')) return;
+
+    try {
+      await axiosInstance.post('/auth/logout');
+      logout();
+    } catch {
+      showMessage('error', 'Gagal logout');
+    }
+  };
+
   return (
     <AdminLayout title="Pengaturan">
-      <>
-        {/* INJECT CSS */}
-        <style>{styles}</style>
+      <div className="container py-4">
 
-        <div className="page-bg">
-          <div className="container py-4">
+        {/* HEADER */}
+        <div className="mb-4">
+          <h3 className="fw-bold">⚙️ Pengaturan Akun</h3>
+          <small className="text-muted">
+            Kelola profil dan keamanan akun
+          </small>
+        </div>
 
-            {/* TITLE */}
-            <h3 className="fw-bold mb-4">Pengaturan Akun</h3>
+        {/* TAB */}
+        <div className="d-flex gap-2 mb-4 flex-wrap">
+          {[
+            { key: 'profile', label: '👤 Profil' },
+            { key: 'security', label: '🔒 Keamanan' },
+            { key: 'danger', label: '⚠️ Zona Bahaya' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              className={`btn ${
+                activeTab === tab.key
+                  ? 'btn-primary'
+                  : tab.key === 'danger'
+                  ? 'btn-outline-danger'
+                  : 'btn-outline-secondary'
+              }`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-            {/* NAV TAB */}
-            <ul className="nav nav-pills mb-4">
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'profile' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('profile')}
-                >
-                  Profil
+        {/* ALERT */}
+        {message && (
+          <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'}`}>
+            {message.text}
+          </div>
+        )}
+
+        <div className="card shadow-sm border-0 rounded-4">
+          <div className="card-body p-4">
+
+            {/* ================= PROFILE ================= */}
+            {activeTab === 'profile' && (
+              <>
+                <h5 className="fw-bold mb-3">Informasi Akun</h5>
+
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <div className="border rounded p-3 bg-light">
+                      <small className="text-muted">Nama</small>
+                      <div className="fw-semibold">{user?.name || '-'}</div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="border rounded p-3 bg-light">
+                      <small className="text-muted">Email</small>
+                      <div className="fw-semibold">{user?.email || '-'}</div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="border rounded p-3 bg-light">
+                      <small className="text-muted">Role</small>
+                      <div className="fw-semibold text-capitalize">
+                        {user?.role || 'admin'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="border rounded p-3 bg-light">
+                      <small className="text-muted">Terdaftar</small>
+                      <div className="fw-semibold">
+                        {user?.created_at
+                          ? new Date(user.created_at).toLocaleDateString('id-ID')
+                          : '-'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ================= SECURITY ================= */}
+            {activeTab === 'security' && (
+              <form onSubmit={handlePasswordUpdate} style={{ maxWidth: 500 }}>
+                <h5 className="fw-bold mb-3">Ganti Password</h5>
+
+                <div className="mb-3">
+                  <label>Password Lama</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={passwordData.current_password}
+                    onChange={(e) =>
+                      setPasswordData({ ...passwordData, current_password: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label>Password Baru</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={passwordData.new_password}
+                    onChange={(e) =>
+                      setPasswordData({ ...passwordData, new_password: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label>Konfirmasi Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={passwordData.new_password_confirmation}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        new_password_confirmation: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <button className="btn btn-warning">
+                  {loading ? 'Memproses...' : '🔐 Update Password'}
                 </button>
-              </li>
+              </form>
+            )}
 
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'security' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('security')}
-                >
-                  Keamanan
-                </button>
-              </li>
+            {/* ================= DANGER ================= */}
+            {activeTab === 'danger' && (
+              <div>
+                <h5 className="fw-bold text-danger mb-3">Zona Bahaya</h5>
 
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${
-                    activeTab === 'danger'
-                      ? 'active bg-danger text-white'
-                      : 'text-danger'
-                  }`}
-                  onClick={() => setActiveTab('danger')}
-                >
-                  Zona Bahaya
-                </button>
-              </li>
-            </ul>
+                <div className="border border-danger rounded p-3 d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>Logout Semua Perangkat</strong>
+                    <div className="text-muted small">
+                      Semua sesi akan dihentikan
+                    </div>
+                  </div>
 
-            {/* ALERT */}
-            {message && (
-              <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'}`}>
-                {message.text}
+                  <button
+                    className="btn btn-danger"
+                    onClick={handleLogoutAll}
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* CARD */}
-            <div className="card card-custom shadow-sm border-0">
-              <div className="card-body p-4">
-
-                {/* PROFILE */}
-                {activeTab === 'profile' && (
-                  <>
-                    <h5 className="fw-bold mb-2">Informasi Profil</h5>
-                    <p className="text-muted mb-4">
-                      Kelola informasi dasar akun Anda.
-                    </p>
-
-                    <form onSubmit={handleProfileUpdate} className="form-container">
-                      <div className="mb-3">
-                        <label className="form-label">Nama</label>
-                        <input
-                          type="text"
-                          name="name"
-                          className="form-control"
-                          value={profileData.name}
-                          onChange={handleChangeProfile}
-                          required
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Email</label>
-                        <input
-                          type="email"
-                          name="email"
-                          className="form-control"
-                          value={profileData.email}
-                          onChange={handleChangeProfile}
-                          required
-                        />
-                      </div>
-
-                      <button className="btn btn-primary" disabled={loading}>
-                        {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                      </button>
-                    </form>
-                  </>
-                )}
-
-                {/* SECURITY */}
-                {activeTab === 'security' && (
-                  <>
-                    <h5 className="fw-bold mb-2">Keamanan</h5>
-                    <p className="text-muted mb-4">
-                      Ganti password untuk menjaga keamanan akun Anda.
-                    </p>
-
-                    <form onSubmit={handlePasswordUpdate} className="form-container">
-                      <div className="mb-3">
-                        <label className="form-label">Password Saat Ini</label>
-                        <input
-                          type="password"
-                          name="current_password"
-                          className="form-control"
-                          value={passwordData.current_password}
-                          onChange={handleChangePassword}
-                          required
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Password Baru</label>
-                        <input
-                          type="password"
-                          name="new_password"
-                          className="form-control"
-                          value={passwordData.new_password}
-                          onChange={handleChangePassword}
-                          required
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Konfirmasi Password</label>
-                        <input
-                          type="password"
-                          name="new_password_confirmation"
-                          className="form-control"
-                          value={passwordData.new_password_confirmation}
-                          onChange={handleChangePassword}
-                          required
-                        />
-                      </div>
-
-                      <button className="btn btn-warning" disabled={loading}>
-                        {loading ? 'Memproses...' : 'Update Password'}
-                      </button>
-                    </form>
-                  </>
-                )}
-
-                {/* DANGER */}
-                {activeTab === 'danger' && (
-                  <>
-                    <h5 className="fw-bold text-danger mb-2">Zona Bahaya</h5>
-                    <p className="text-muted mb-4">
-                      Aksi ini sensitif dan tidak dapat dibatalkan.
-                    </p>
-
-                    <div className="danger-box d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>Logout Semua Perangkat</strong>
-                        <div className="text-muted small">
-                          Keluar dari semua sesi aktif akun Anda
-                        </div>
-                      </div>
-
-                      <button className="btn btn-outline-danger">
-                        Logout
-                      </button>
-                    </div>
-                  </>
-                )}
-
-              </div>
-            </div>
-
           </div>
         </div>
-      </>
+
+      </div>
     </AdminLayout>
   );
 }

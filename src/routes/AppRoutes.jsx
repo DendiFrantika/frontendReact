@@ -26,7 +26,6 @@ import LaporanRekamMedis from '../pages/admin/LaporanRekamMedis';
 import LaporanDokter from '../pages/admin/LaporanDokter';
 import LaporanPendaftaran from '../pages/admin/LaporanPendaftaran';
 import Pengaturan from '../pages/admin/Pengaturan';
-import Analytics from '../pages/admin/Analytics';
 import Aktivitas from '../pages/admin/Aktivitas';
 import AlurAdminKasir from '../pages/admin/AlurAdminKasir';
 
@@ -73,7 +72,6 @@ const AppRoutes = () => {
       <Route path="/admin/laporan/pendaftaran" element={<PrivateRoute role="admin"><LaporanPendaftaran /></PrivateRoute>} />
       <Route path="/admin/aktivitas" element={<PrivateRoute role="admin"><Aktivitas /></PrivateRoute>} />
       <Route path="/admin/pengaturan" element={<PrivateRoute role="admin"><Pengaturan /></PrivateRoute>} />
-      <Route path="/admin/analytics" element={<PrivateRoute role="admin"><Analytics /></PrivateRoute>} />
 
       {/* Pasien */}
       <Route path="/pasien" element={<PrivateRoute role="pasien"><PasienDashboard /></PrivateRoute>} />

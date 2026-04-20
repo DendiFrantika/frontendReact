@@ -254,28 +254,138 @@ export default function Jadwal() {
       )}
 
       {/* MODAL FORM */}
-      <AdminCrudModal open={showForm} onClose={cancelForm}>
-        <form onSubmit={handleSubmit}>
+<AdminCrudModal open={showForm} onClose={cancelForm}>
+  <div style={{ padding: '4px 0' }}>
 
-          <select name="dokter_id" value={formData.dokter_id} onChange={handleChange}>
-            <option value="">Pilih dokter</option>
+    {/* Header */}
+    <div style={{ marginBottom: '24px' }}>
+      <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-tertiary)', margin: '0 0 4px' }}>
+        Manajemen Jadwal
+      </p>
+      <h2 style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>
+        {editingId ? 'Edit Jadwal' : 'Tambah Jadwal'}
+      </h2>
+    </div>
+
+    {submitError && (
+      <p style={{ fontSize: '13px', color: 'var(--color-text-danger)', background: 'var(--color-background-danger)', padding: '10px 14px', borderRadius: 'var(--border-radius-md)', marginBottom: '16px' }}>
+        {submitError}
+      </p>
+    )}
+
+    <form onSubmit={handleSubmit}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        {/* Dokter */}
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+            Dokter <span style={{ color: 'var(--color-text-danger)' }}>*</span>
+          </label>
+          <select
+            name="dokter_id"
+            value={formData.dokter_id}
+            onChange={handleChange}
+            required
+            style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: errors.dokter_id ? '1px solid var(--color-border-danger)' : '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px' }}
+          >
+            <option value="">— Pilih dokter —</option>
             {doctors.map(d => <option key={d.id} value={d.id}>{d.nama}</option>)}
           </select>
+          {errors.dokter_id && <small style={{ color: 'var(--color-text-danger)', fontSize: '12px' }}>{errors.dokter_id}</small>}
+        </div>
 
-          <select name="hari" value={formData.hari} onChange={handleChange}>
-            <option value="">Pilih hari</option>
-            {days.map(d => <option key={d}>{d}</option>)}
-          </select>
+        {/* Hari */}
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+            Hari <span style={{ color: 'var(--color-text-danger)' }}>*</span>
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+            {['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'].map(day => {
+              const label = day.substring(0, 3);
+              const selected = formData.hari === day;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => { setFormData(f => ({ ...f, hari: day })); setErrors(p => ({ ...p, hari: null })); }}
+                  style={{
+                    textAlign: 'center', padding: '8px 4px',
+                    borderRadius: 'var(--border-radius-md)',
+                    border: selected ? '2px solid #185FA5' : '0.5px solid var(--color-border-secondary)',
+                    background: selected ? '#E6F1FB' : 'transparent',
+                    color: selected ? '#0C447C' : 'var(--color-text-secondary)',
+                    fontSize: '12px', fontWeight: selected ? 500 : 400, cursor: 'pointer',
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {errors.hari && <small style={{ color: 'var(--color-text-danger)', fontSize: '12px' }}>{errors.hari}</small>}
+        </div>
 
-          <input type="time" name="jam_mulai" value={formData.jam_mulai} onChange={handleChange}/>
-          <input type="time" name="jam_selesai" value={formData.jam_selesai} onChange={handleChange}/>
-          <input type="number" name="kapasitas" value={formData.kapasitas} onChange={handleChange}/>
+        {/* Jam */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+              Jam mulai <span style={{ color: 'var(--color-text-danger)' }}>*</span>
+            </label>
+            <input
+              type="time" name="jam_mulai" value={formData.jam_mulai} onChange={handleChange} required
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: errors.jam_mulai ? '1px solid var(--color-border-danger)' : '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px', boxSizing: 'border-box' }}
+            />
+            {errors.jam_mulai && <small style={{ color: 'var(--color-text-danger)', fontSize: '12px' }}>{errors.jam_mulai}</small>}
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+              Jam selesai <span style={{ color: 'var(--color-text-danger)' }}>*</span>
+            </label>
+            <input
+              type="time" name="jam_selesai" value={formData.jam_selesai} onChange={handleChange} required
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: errors.jam_selesai ? '1px solid var(--color-border-danger)' : '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px', boxSizing: 'border-box' }}
+            />
+            {errors.jam_selesai && <small style={{ color: 'var(--color-text-danger)', fontSize: '12px' }}>{errors.jam_selesai}</small>}
+          </div>
+        </div>
 
-          <button type="submit">
-            {submitLoading ? 'Saving...' : 'Simpan'}
+        {/* Kapasitas */}
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+            Kapasitas pasien
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              type="range" min="1" max="50"
+              name="kapasitas" value={formData.kapasitas} onChange={handleChange}
+              style={{ flex: 1 }}
+            />
+            <div style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-secondary)', borderRadius: 'var(--border-radius-md)', padding: '6px 14px', fontSize: '14px', fontWeight: 500, minWidth: '42px', textAlign: 'center' }}>
+              {formData.kapasitas}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div style={{ borderTop: '0.5px solid var(--color-border-tertiary)', paddingTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <button
+            type="button" onClick={cancelForm} disabled={submitLoading}
+            style={{ padding: '9px 20px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-secondary)', background: 'transparent', color: 'var(--color-text-secondary)', fontSize: '14px', cursor: 'pointer' }}
+          >
+            Batal
           </button>
-        </form>
-      </AdminCrudModal>
+          <button
+            type="submit" disabled={submitLoading}
+            style={{ padding: '9px 20px', borderRadius: 'var(--border-radius-md)', border: 'none', background: submitLoading ? 'var(--color-background-secondary)' : '#185FA5', color: submitLoading ? 'var(--color-text-secondary)' : '#fff', fontSize: '14px', fontWeight: 500, cursor: submitLoading ? 'not-allowed' : 'pointer' }}
+          >
+            {submitLoading ? 'Menyimpan...' : editingId ? 'Update jadwal' : 'Simpan jadwal'}
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</AdminCrudModal>
 
       {/* DELETE */}
       <AdminCrudModal open={!!deleteTarget} onClose={()=>setDeleteTarget(null)}>
