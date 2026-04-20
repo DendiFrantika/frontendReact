@@ -259,11 +259,36 @@
   opacity: 0.9;
 }
 
-.table {
+.table-report {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
+
+.table-report th,
+.table-report td {
+  border: 1px solid #e0e0e0;
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.table-report th {
+  background: #f8f9fa;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.table-report tbody tr:nth-child(even) {
+  background: #fbfbfb;
+}
+
+.table-report tbody tr:hover {
+  background: #f0f4f8;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
 
 .table th,
 .table td {

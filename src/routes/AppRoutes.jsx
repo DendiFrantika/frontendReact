@@ -21,6 +21,10 @@ import JadwalAdmin from '../pages/admin/Jadwal';
 import Pendaftaran from '../pages/admin/Pendaftaran';
 import RekamMedis from '../pages/admin/RekamMedis';
 import Laporan from '../pages/admin/Laporan';
+import LaporanPasien from '../pages/admin/LaporanPasien';
+import LaporanRekamMedis from '../pages/admin/LaporanRekamMedis';
+import LaporanDokter from '../pages/admin/LaporanDokter';
+import LaporanPendaftaran from '../pages/admin/LaporanPendaftaran';
 import Pengaturan from '../pages/admin/Pengaturan';
 import Analytics from '../pages/admin/Analytics';
 import Aktivitas from '../pages/admin/Aktivitas';
@@ -63,6 +67,10 @@ const AppRoutes = () => {
       <Route path="/admin/pendaftaran" element={<PrivateRoute role="admin"><Pendaftaran /></PrivateRoute>} />
       <Route path="/admin/rekam-medis" element={<PrivateRoute role="admin"><RekamMedis /></PrivateRoute>} />
       <Route path="/admin/laporan" element={<PrivateRoute role="admin"><Laporan /></PrivateRoute>} />
+      <Route path="/admin/laporan/pasien" element={<PrivateRoute role="admin"><LaporanPasien /></PrivateRoute>} />
+      <Route path="/admin/laporan/rekam-medis" element={<PrivateRoute role="admin"><LaporanRekamMedis /></PrivateRoute>} />
+      <Route path="/admin/laporan/dokter" element={<PrivateRoute role="admin"><LaporanDokter /></PrivateRoute>} />
+      <Route path="/admin/laporan/pendaftaran" element={<PrivateRoute role="admin"><LaporanPendaftaran /></PrivateRoute>} />
       <Route path="/admin/aktivitas" element={<PrivateRoute role="admin"><Aktivitas /></PrivateRoute>} />
       <Route path="/admin/pengaturan" element={<PrivateRoute role="admin"><Pengaturan /></PrivateRoute>} />
       <Route path="/admin/analytics" element={<PrivateRoute role="admin"><Analytics /></PrivateRoute>} />

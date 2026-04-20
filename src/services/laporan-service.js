@@ -3,11 +3,87 @@ import apiService from './api-service';
 const laporanService = {
   getAll: async () => {
     try {
-      const response = await apiService.get('/laporan');
+      const response = await apiService.get('/admin/laporan');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
+  },
+
+  getPatientReport: async (params = {}) => {
+    const paths = ['/admin/laporan/pasien', '/admin/laporan', '/laporan/pasien', '/laporan'];
+    let lastError = null;
+
+    for (const path of paths) {
+      try {
+        const response = await apiService.get(path, { params });
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        if (error.response?.status !== 404) {
+          throw error.response?.data || error;
+        }
+      }
+    }
+
+    throw lastError?.response?.data || lastError || new Error('Endpoint laporan pasien tidak ditemukan');
+  },
+
+  getMedicalRecordReport: async (params = {}) => {
+    const paths = ['/admin/laporan/rekam-medis', '/laporan/rekam-medis', '/laporan'];
+    let lastError = null;
+
+    for (const path of paths) {
+      try {
+        const response = await apiService.get(path, { params });
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        if (error.response?.status !== 404) {
+          throw error.response?.data || error;
+        }
+      }
+    }
+
+    throw lastError?.response?.data || lastError || new Error('Endpoint laporan rekam medis tidak ditemukan');
+  },
+
+  getDoctorReport: async (params = {}) => {
+    const paths = ['/admin/laporan/dokter', '/laporan/dokter', '/laporan'];
+    let lastError = null;
+
+    for (const path of paths) {
+      try {
+        const response = await apiService.get(path, { params });
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        if (error.response?.status !== 404) {
+          throw error.response?.data || error;
+        }
+      }
+    }
+
+    throw lastError?.response?.data || lastError || new Error('Endpoint laporan dokter tidak ditemukan');
+  },
+
+  getRegistrationReport: async (params = {}) => {
+    const paths = ['/admin/laporan/pendaftaran', '/laporan/pendaftaran', '/laporan'];
+    let lastError = null;
+
+    for (const path of paths) {
+      try {
+        const response = await apiService.get(path, { params });
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        if (error.response?.status !== 404) {
+          throw error.response?.data || error;
+        }
+      }
+    }
+
+    throw lastError?.response?.data || lastError || new Error('Endpoint laporan pendaftaran tidak ditemukan');
   },
 
   getById: async (id) => {
@@ -58,6 +134,18 @@ const laporanService = {
   exportPDF: async (reportId) => {
     try {
       const response = await apiService.get(`/laporan/${reportId}/export/pdf`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  exportPatientPdf: async (params = {}) => {
+    try {
+      const response = await apiService.get('/laporan/export/pdf', {
+        params,
         responseType: 'blob',
       });
       return response.data;

@@ -113,6 +113,13 @@ const AdminDashboard = () => {
     { icon: '📈', label: 'Analytics', link: '/admin/analytics' },
   ];
 
+  const laporanCards = [
+    { icon: '👥', label: 'Laporan Pasien', link: '/admin/laporan/pasien', description: 'Lihat daftar pasien dan ringkasan laporan.' },
+    { icon: '🩺', label: 'Laporan Rekam Medis', link: '/admin/laporan/rekam-medis', description: 'Analisis rekam medis pasien.' },
+    { icon: '👨‍⚕️', label: 'Laporan Dokter', link: '/admin/laporan', description: 'Statistik pasien per dokter.' },
+    { icon: '🗓️', label: 'Laporan Pendaftaran', link: '/admin/laporan', description: 'Laporan status pendaftaran.' },
+  ];
+
   // Pie chart data handled via state
 
   const formatDate = (dateString) => {
@@ -201,6 +208,21 @@ const AdminDashboard = () => {
                   <Link key={action.label} to={action.link} className="action-btn">
                     <div className="action-icon">{action.icon}</div>
                     <span>{action.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="dashboard-section">
+              <h2>Menu Laporan</h2>
+              <div className="quick-actions">
+                {laporanCards.map((action) => (
+                  <Link key={action.label} to={action.link} className="action-btn">
+                    <div className="action-icon">{action.icon}</div>
+                    <strong>{action.label}</strong>
+                    <span style={{ marginTop: '8px', display: 'block', color: '#7f8c8d', fontSize: '0.95rem' }}>
+                      {action.description}
+                    </span>
                   </Link>
                 ))}
               </div>
