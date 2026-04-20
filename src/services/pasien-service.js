@@ -3,7 +3,7 @@ import apiService from './api-service';
 const pasienService = {
   getAll: async () => {
     try {
-      const response = await apiService.get('/pasien');
+      const response = await apiService.get('/admin/pasien');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -12,7 +12,7 @@ const pasienService = {
 
   getById: async (id) => {
     try {
-      const response = await apiService.get(`/pasien/${id}`);
+      const response = await apiService.get(`/admin/pasien/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -21,7 +21,7 @@ const pasienService = {
 
   create: async (data) => {
     try {
-      const response = await apiService.post('/pasien', data);
+      const response = await apiService.post('/admin/pasien', data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -30,7 +30,7 @@ const pasienService = {
 
   update: async (id, data) => {
     try {
-      const response = await apiService.put(`/pasien/${id}`, data);
+      const response = await apiService.put(`/admin/pasien/${id}`, data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -39,7 +39,7 @@ const pasienService = {
 
   delete: async (id) => {
     try {
-      const response = await apiService.delete(`/pasien/${id}`);
+      const response = await apiService.delete(`/admin/pasien/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

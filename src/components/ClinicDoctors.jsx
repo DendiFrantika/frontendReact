@@ -1,15 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export function ClinicDoctors() {
-  const doctors = [
-    { id: 1, name: 'Dr. Ahmad Wijaya', spec: 'Dokter Umum', schedule: 'Senin - Jumat 08:00 - 17:00' },
-    { id: 2, name: 'Dr. Siti Nurhaliza', spec: 'Spesialis Gigi', schedule: 'Senin - Sabtu 09:00 - 18:00' },
-    { id: 3, name: 'Dr. Budi Santoso', spec: 'Spesialis Anak', schedule: 'Selasa - Kamis 10:00 - 16:00' },
-  ];
+  // 1. Inisialisasi state dengan array kosong
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 2. Logic pemanggilan API
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/public/dokters')
+      .then((res) => res.json())
+      .then((response) => {
+        // Kita ambil response.data sesuai struktur controller Laravel Anda
+        setDoctors(response.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal memuat data:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  // 3. Tampilan loading sederhana agar user tidak bingung saat data diproses
+  if (loading) {
+    return <div className="text-center py-20">Memuat data...</div>;
+  }
 
   return (
     <section id="jadwal">
-      <div className="max-w-7xl">
+      <div className="max-w-7xl mx-auto px-4"> {/* Tambahkan mx-auto px-4 agar tetap di tengah */}
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-2 bg-sky-100">
             Dokter Kami
@@ -40,13 +58,15 @@ export function ClinicDoctors() {
                 👨‍⚕️
               </div>
               <h3 style={{fontWeight: 700, color: '#1f2937', marginBottom: '0.5rem'}}>
-                {doctor.name}
+                {doctor.nama} {/* Sesuaikan: sebelumnya .name menjadi .nama */}
               </h3>
               <p style={{color: '#0ea5e9', fontWeight: 600, marginBottom: '1rem', fontSize: '0.875rem'}}>
-                {doctor.spec}
+                {doctor.spesialisasi} {/* Sesuaikan: sebelumnya .spec menjadi .spesialisasi */}
               </p>
               <p style={{color: '#6b7280', fontSize: '0.875rem'}}>
-                {doctor.schedule}
+                {/* Gabungkan hari libur dan jam praktik jika perlu */}
+                {doctor.hari_libur ? `Kecuali ${doctor.hari_libur}, ` : ''} 
+                {doctor.jam_praktek_mulai.substring(0,5)} - {doctor.jam_praktek_selesai.substring(0,5)}
               </p>
             </div>
           ))}

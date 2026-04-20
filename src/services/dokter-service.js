@@ -3,7 +3,7 @@ import apiService from './api-service';
 const dokterService = {
   getAll: async () => {
     try {
-      const response = await apiService.get('/dokter');
+      const response = await apiService.get('/admin/dokter');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -12,7 +12,7 @@ const dokterService = {
 
   getById: async (id) => {
     try {
-      const response = await apiService.get(`/dokter/${id}`);
+      const response = await apiService.get(`/admin/dokter/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -21,7 +21,7 @@ const dokterService = {
 
   create: async (data) => {
     try {
-      const response = await apiService.post('/dokter', data);
+      const response = await apiService.post('/admin/dokter', data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -30,7 +30,7 @@ const dokterService = {
 
   update: async (id, data) => {
     try {
-      const response = await apiService.put(`/dokter/${id}`, data);
+      const response = await apiService.put(`/admin/dokter/${id}`, data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -39,7 +39,7 @@ const dokterService = {
 
   delete: async (id) => {
     try {
-      const response = await apiService.delete(`/dokter/${id}`);
+      const response = await apiService.delete(`/admin/dokter/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -48,7 +48,7 @@ const dokterService = {
 
   getSchedule: async (id) => {
     try {
-      const response = await apiService.get(`/dokter/${id}/schedule`);
+      const response = await apiService.get(`/admin/dokter/${id}/schedule`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -57,7 +57,7 @@ const dokterService = {
 
   getQueue: async () => {
     try {
-      const response = await apiService.get('/dokter/queue');
+      const response = await apiService.get('/admin/dokter/queue');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -66,7 +66,7 @@ const dokterService = {
 
   getDiagnosis: async () => {
     try {
-      const response = await apiService.get('/dokter/diagnosis');
+      const response = await apiService.get('/admin/dokter/diagnosis');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -75,7 +75,7 @@ const dokterService = {
 
   saveDiagnosis: async (data) => {
     try {
-      const response = await apiService.post('/dokter/diagnosis', data);
+      const response = await apiService.post('/admin/dokter/diagnosis', data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
