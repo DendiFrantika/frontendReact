@@ -41,10 +41,13 @@ const DokterLayout = ({ title, children }) => {
               <p className="user-role">Dokter</p>
             </div>
           </div>
-          <button className="logout-btn" onClick={() => {
-            logout();
-            window.location.href = '/login';
-          }}>
+          <button
+            className="logout-btn"
+            onClick={async () => {
+              await logout();
+              window.location.href = '/login';
+            }}
+          >
             <span>🚪 Logout</span>
           </button>
         </div>

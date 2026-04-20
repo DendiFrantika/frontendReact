@@ -14,35 +14,45 @@ export default function JadwalDokter() {
     setLoading(true);
     try {
       const res = await axiosInstance.get('/dokter/jadwal');
-      setSchedules(res.data);
+      // Response: { dokter: {...}, jadwal: [...] }
+      setSchedules(res.data.jadwal || []);
     } catch (err) {
       console.error('Error fetching schedules:', err);
+      setSchedules([]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <DokterLayout title="Jadwal Saya">
-      {loading ? (
-        <p>Memuat jadwal...</p>
+   <DokterLayout title="Jadwal Saya">
+  {loading ? (
+    <p>Memuat jadwal...</p>
+  ) : (
+    <div className="schedule-list">
+      {schedules.length > 0 ? (
+        schedules.map((schedule) => (
+          <div key={schedule.id} className="schedule-item">
+            <div className="schedule-info">
+              
+              <h3>{schedule.hari}</h3>
+
+              <p>
+                Waktu: {schedule.jam_mulai} - {schedule.jam_selesai}
+              </p>
+
+              <p>
+                Kapasitas: {schedule.kapasitas ?? '-'}
+              </p>
+
+            </div>
+          </div>
+        ))
       ) : (
-        <div className="schedule-list">
-          {schedules.length > 0 ? (
-            schedules.map((schedule) => (
-              <div key={schedule.id} className="schedule-item">
-                <div className="schedule-info">
-                  <h3>{schedule.day}</h3>
-                  <p>Waktu: {schedule.startTime} - {schedule.endTime}</p>
-                  <p>Status: {schedule.status}</p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p>Tidak ada jadwal tersedia.</p>
-          )}
-        </div>
+        <p>Tidak ada jadwal tersedia.</p>
       )}
-    </DokterLayout>
+    </div>
+  )}
+</DokterLayout>
   );
 }

@@ -8,7 +8,7 @@ import { getRoleFromResponse, normalizeUserPayload } from './authRoles';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, isAuthenticated, user, loading } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -38,12 +38,12 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || !user?.role) return;
+    if (loading || !isAuthenticated || !user?.role) return;
     const r = String(user.role).toLowerCase();
     if (r === 'admin') navigate('/admin', { replace: true });
     else if (r === 'dokter') navigate('/dokter', { replace: true });
     else navigate('/pasien', { replace: true });
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, loading, user, navigate]);
 
   const closeSessionModal = () => {
     setSessionExpiredOpen(false);

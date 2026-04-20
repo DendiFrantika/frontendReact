@@ -82,10 +82,13 @@ const Sidebar = () => {
             <p className="user-role">{roleLabel}</p>
           </div>
         </div>
-        <button className="logout-btn" onClick={() => {
-          logout();
-          navigate('/login');
-        }}>
+        <button
+          className="logout-btn"
+          onClick={async () => {
+            await logout();
+            navigate('/login');
+          }}
+        >
           <span>🚪 Logout</span>
         </button>
       </div>
