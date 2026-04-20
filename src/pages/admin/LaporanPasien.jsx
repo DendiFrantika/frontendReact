@@ -28,6 +28,7 @@ const LaporanPasien = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [error, setError] = useState('');
 
   const fetchLaporan = useCallback(async () => {
@@ -93,6 +94,26 @@ const LaporanPasien = () => {
       setError('Gagal mengekspor laporan pasien ke PDF.');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExportingExcel(true);
+    setError('');
+
+    try {
+      const params = { ...filters };
+      Object.keys(params).forEach((key) => {
+        if (!params[key]) delete params[key];
+      });
+
+      const fileData = await laporanService.exportPatientExcel(params);
+      downloadBlob(fileData, 'laporan-pasien.csv');
+    } catch (err) {
+      console.error(err);
+      setError('Gagal mengekspor laporan pasien ke Excel.');
+    } finally {
+      setExportingExcel(false);
     }
   };
 
@@ -179,6 +200,9 @@ const LaporanPasien = () => {
             <button type="button" className="btn" onClick={handleExportPdf} disabled={exporting}>
               {exporting ? 'Mengekspor PDF…' : 'Export PDF'}
             </button>
+            <button type="button" className="btn" onClick={handleExportExcel} disabled={exportingExcel}>
+              {exportingExcel ? 'Mengekspor Excel…' : 'Export Excel'}
+            </button>
             <button type="button" className="btn danger" onClick={resetFilters}>
               Reset Filter
             </button>
@@ -216,7 +240,7 @@ const LaporanPasien = () => {
             <div className="dashboard-section" style={{ padding: '20px', marginBottom: '20px' }}>
               <h3>Distribusi Jenis Kelamin</h3>
               <div className="activity-list">
-                {summary.jenis_kelamin.map((item) => (
+                {summary?.jenis_kelamin?.map((item, index) => (
                   <div key={item.jenis_kelamin || item.label} className="activity-item" style={{ background: '#fff' }}>
                     <span className="activity-icon">🧾</span>
                     <div className="activity-info">

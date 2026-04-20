@@ -44,6 +44,12 @@ export default function Pasien() {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [form, setForm] = useState(emptyForm);
 
   const [editId, setEditId] = useState(null);
@@ -65,9 +71,12 @@ export default function Pasien() {
     return () => clearTimeout(t);
   }, [filterSearchInput]);
 
-  const fetchPatients = useCallback(async () => {
+  const fetchPatients = useCallback(async (page = 1) => {
     setLoading(true);
-    const params = {};
+    const params = {
+      page: page,
+      per_page: itemsPerPage
+    };
     if (filterSearch) params.search = filterSearch;
     if (filterJk) params.jenis_kelamin = filterJk;
     if (filterGoldar) params.golongan_darah = filterGoldar;
@@ -75,17 +84,46 @@ export default function Pasien() {
       const res = await requestWithFallback([
         { method: 'get', url: '/admin/pasien', params },
       ]);
-      setPatients(unpackCollection(res.data));
+      
+      // Handle paginated response
+      const data = res.data;
+      if (data.data && Array.isArray(data.data)) {
+        setPatients(data.data);
+        setTotalItems(data.total || data.data.length);
+        setTotalPages(data.last_page || Math.ceil((data.total || data.data.length) / itemsPerPage));
+        setCurrentPage(data.current_page || page);
+      } else {
+        // Fallback for non-paginated response
+        setPatients(unpackCollection(data));
+        setTotalItems(unpackCollection(data).length);
+        setTotalPages(1);
+        setCurrentPage(1);
+      }
     } catch (err) {
       console.error(err);
+      setPatients([]);
+      setTotalItems(0);
+      setTotalPages(1);
+      setCurrentPage(1);
     } finally {
       setLoading(false);
     }
-  }, [filterSearch, filterJk, filterGoldar]);
+  }, [filterSearch, filterJk, filterGoldar, itemsPerPage]);
 
   useEffect(() => {
-    fetchPatients();
-  }, [fetchPatients]);
+    fetchPatients(currentPage);
+  }, [fetchPatients, currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
   const hitungUmur = (tanggal_lahir) => {
     if (!tanggal_lahir) return '-';
@@ -135,7 +173,7 @@ export default function Pasien() {
           { method: 'post', url: '/admin/pasien', data: payload },
         ]);
       }
-      await fetchPatients();
+      await fetchPatients(currentPage);
       setShowForm(false);
       setNotice(editId ? 'Data pasien berhasil diperbarui.' : 'Data pasien berhasil ditambahkan.');
       resetForm();
@@ -176,7 +214,11 @@ export default function Pasien() {
       await requestWithFallback([
         { method: 'delete', url: `/admin/pasien/${deleteTarget.id}` },
       ]);
-      await fetchPatients();
+      
+      // Jika ini adalah item terakhir di halaman dan bukan halaman pertama, kembali ke halaman sebelumnya
+      const newPage = (patients.length === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
+      await fetchPatients(newPage);
+      
       setDeleteTarget(null);
       setNotice('Data pasien berhasil dihapus.');
     } catch (err) {
@@ -349,7 +391,7 @@ export default function Pasien() {
               ) : (
                 patients.map((p, i) => (
                   <tr key={p.id}>
-                    <td>{i + 1}</td>
+                    <td>{(currentPage - 1) * itemsPerPage + i + 1}</td>
                     <td>{p.nama}</td>
                     <td>{hitungUmur(p.tanggal_lahir)} thn</td>
                     <td>{displayJenisKelamin(p.jenis_kelamin)}</td>
@@ -365,6 +407,76 @@ export default function Pasien() {
               )}
             </tbody>
           </table>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            <div className="pagination-info">
+              <span>
+                Menampilkan {patients.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} - {Math.min(currentPage * itemsPerPage, totalItems)} dari {totalItems} data
+              </span>
+            </div>
+            
+            <div className="pagination-controls">
+              <button 
+                className="pagination-btn" 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || loading}
+              >
+                ‹ Sebelumnya
+              </button>
+              
+              <div className="pagination-pages">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={loading}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button 
+                className="pagination-btn" 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || loading}
+              >
+                Selanjutnya ›
+              </button>
+            </div>
+
+            <div className="items-per-page">
+              <label>Tampilkan:</label>
+              <select 
+                value={itemsPerPage} 
+                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                disabled={loading}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <span>per halaman</span>
+            </div>
+          </div>
         )}
       </div>
 

@@ -23,6 +23,8 @@ const LaporanDokter = () => {
   const [laporan, setLaporan] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [error, setError] = useState('');
 
   const fetchLaporan = useCallback(async () => {
@@ -57,6 +59,57 @@ const LaporanDokter = () => {
 
   const resetFilters = () => {
     setFilters(initialFilters);
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportPdf = async () => {
+    setExporting(true);
+    setError('');
+
+    try {
+      const params = { ...filters };
+      Object.keys(params).forEach((key) => {
+        if (!params[key]) delete params[key];
+      });
+
+      const fileData = await laporanService.exportDoctorPdf(params);
+      downloadBlob(fileData, 'laporan-dokter.pdf');
+    } catch (err) {
+      console.error(err);
+      setError('Gagal mengekspor laporan dokter ke PDF.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExportingExcel(true);
+    setError('');
+
+    try {
+      const params = { ...filters };
+      Object.keys(params).forEach((key) => {
+        if (!params[key]) delete params[key];
+      });
+
+      const fileData = await laporanService.exportDoctorExcel(params);
+      downloadBlob(fileData, 'laporan-dokter.csv');
+    } catch (err) {
+      console.error(err);
+      setError('Gagal mengekspor laporan dokter ke Excel.');
+    } finally {
+      setExportingExcel(false);
+    }
   };
 
   return (
@@ -95,6 +148,12 @@ const LaporanDokter = () => {
           <div className="form-actions">
             <button type="button" className="btn" onClick={fetchLaporan}>
               Terapkan Filter
+            </button>
+            <button type="button" className="btn" onClick={handleExportPdf} disabled={exporting}>
+              {exporting ? 'Mengekspor PDF…' : 'Export PDF'}
+            </button>
+            <button type="button" className="btn" onClick={handleExportExcel} disabled={exportingExcel}>
+              {exportingExcel ? 'Mengekspor Excel…' : 'Export Excel'}
             </button>
             <button type="button" className="btn danger" onClick={resetFilters}>
               Reset Filter

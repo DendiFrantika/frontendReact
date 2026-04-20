@@ -87,7 +87,7 @@ export default function Dokter() {
           },
           {
             method: 'put',
-            url: `/dokter/${editingId}`,
+            url: `/admin/dokter/${editingId}`,
             data: { nama, spesialisasi, no_telepon, hari_libur, status: Number(status) },
           },
         ]);
@@ -100,7 +100,7 @@ export default function Dokter() {
           },
           {
             method: 'post',
-            url: '/dokter',
+            url: '/admin/dokter',
             data: { ...formData, status: Number(formData.status) },
           },
         ]);

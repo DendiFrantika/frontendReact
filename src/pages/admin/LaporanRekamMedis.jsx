@@ -28,6 +28,8 @@ const LaporanRekamMedis = () => {
   const [doctors, setDoctors] = useState([]);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [error, setError] = useState('');
 
   const fetchOptions = useCallback(async () => {
@@ -75,6 +77,57 @@ const LaporanRekamMedis = () => {
 
   const resetFilters = () => {
     setFilters(initialFilters);
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportPdf = async () => {
+    setExporting(true);
+    setError('');
+
+    try {
+      const params = { ...filters };
+      Object.keys(params).forEach((key) => {
+        if (!params[key]) delete params[key];
+      });
+
+      const fileData = await laporanService.exportMedicalRecordPdf(params);
+      downloadBlob(fileData, 'laporan-rekam-medis.pdf');
+    } catch (err) {
+      console.error(err);
+      setError('Gagal mengekspor laporan rekam medis ke PDF.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExportingExcel(true);
+    setError('');
+
+    try {
+      const params = { ...filters };
+      Object.keys(params).forEach((key) => {
+        if (!params[key]) delete params[key];
+      });
+
+      const fileData = await laporanService.exportMedicalRecordExcel(params);
+      downloadBlob(fileData, 'laporan-rekam-medis.csv');
+    } catch (err) {
+      console.error(err);
+      setError('Gagal mengekspor laporan rekam medis ke Excel.');
+    } finally {
+      setExportingExcel(false);
+    }
   };
 
   return (
@@ -148,6 +201,12 @@ const LaporanRekamMedis = () => {
             <button type="button" className="btn" onClick={fetchLaporan}>
               Terapkan Filter
             </button>
+            <button type="button" className="btn" onClick={handleExportPdf} disabled={exporting}>
+              {exporting ? 'Mengekspor PDF…' : 'Export PDF'}
+            </button>
+            <button type="button" className="btn" onClick={handleExportExcel} disabled={exportingExcel}>
+              {exportingExcel ? 'Mengekspor Excel…' : 'Export Excel'}
+            </button>
             <button type="button" className="btn danger" onClick={resetFilters}>
               Reset Filter
             </button>
@@ -182,9 +241,9 @@ const LaporanRekamMedis = () => {
                         <td>{item.pasien?.nama || item.pasien?.name || '-'}</td>
                         <td>{item.dokter?.nama || item.dokter?.name || '-'}</td>
                         <td>{formatDate(item.tanggal_kunjungan)}</td>
-                        <td>{item.keluhan || item.keluhan_pasien || '-'}</td>
+                        <td>{item.keluhan || item.keluhan_utama || item.keluhan_pasien || '-'}</td>
                         <td>{item.diagnosis || '-'}</td>
-                        <td>{item.tindakan || item.resep || '-'}</td>
+                        <td>{item.tindakan || item.resep || item.treatment || '-'}</td>
                       </tr>
                     ))
                   ) : (

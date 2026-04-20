@@ -4,16 +4,20 @@ import axiosInstance from '../../api/axios';
 
 export default function Aktivitas() {
   const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
     const fetchActivities = async () => {
       setLoading(true);
       try {
-        const res = await axiosInstance.get('/admin/recent-activities');
-        setActivities(res.data);
+        const res = await axiosInstance.get('/admin/aktivitas-hari-ini');
+
+        // Backend kini mengembalikan array langsung (bukan object bersarang)
+        const data = Array.isArray(res.data) ? res.data : [];
+        setActivities(data);
       } catch (err) {
         console.error('Error fetching activities', err);
+        setActivities([]);
       } finally {
         setLoading(false);
       }
@@ -22,23 +26,20 @@ export default function Aktivitas() {
     fetchActivities();
   }, []);
 
-  // Format waktu
-  const formatDate = (date) => {
-    return new Date(date).toLocaleString('id-ID', {
+  const formatDate = (date) =>
+    new Date(date).toLocaleString('id-ID', {
       dateStyle: 'medium',
       timeStyle: 'short',
     });
-  };
 
-  // Badge warna berdasarkan jenis aktivitas
-  const getBadge = (text) => {
-    if (!text) return 'secondary';
-
-    if (text.toLowerCase().includes('tambah')) return 'success';
-    if (text.toLowerCase().includes('hapus')) return 'danger';
-    if (text.toLowerCase().includes('update')) return 'warning';
-
-    return 'primary';
+  // Warna badge berdasarkan type yang dikirim backend
+  const getBadgeConfig = (type) => {
+    switch (type) {
+      case 'pendaftaran': return { color: 'primary',  icon: '📋', label: 'Pendaftaran' };
+      case 'rekam_medis': return { color: 'success',  icon: '🩺', label: 'Rekam Medis' };
+      case 'pasien_baru': return { color: 'info',     icon: '👤', label: 'Pasien Baru' };
+      default:            return { color: 'secondary', icon: '📌', label: 'Aktivitas'  };
+    }
   };
 
   return (
@@ -48,8 +49,8 @@ export default function Aktivitas() {
         {/* LOADING */}
         {loading && (
           <div className="text-center py-5">
-            <div className="spinner-border text-primary"></div>
-            <p className="mt-2">Memuat aktivitas...</p>
+            <div className="spinner-border text-primary" role="status" />
+            <p className="mt-2 text-muted">Memuat aktivitas...</p>
           </div>
         )}
 
@@ -57,30 +58,36 @@ export default function Aktivitas() {
         {!loading && activities.length > 0 && (
           <div className="card shadow-sm border-0">
             <div className="card-body">
-
-              <h5 className="mb-4">Log Aktivitas Terbaru</h5>
-
+              <h5 className="mb-4">Log Aktivitas Hari Ini</h5>
               <ul className="list-group list-group-flush">
-                {activities.map((a, idx) => (
-                  <li
-                    key={a.id || idx}
-                    className="list-group-item d-flex justify-content-between align-items-start"
-                  >
-                    <div>
-                      <span className={`badge bg-${getBadge(a.description)} me-2`}>
-                        Aktivitas
-                      </span>
-
-                      <span>{a.description}</span>
-
-                      <div className="text-muted small mt-1">
-                        {formatDate(a.timestamp)}
+                {activities.map((a, idx) => {
+                  const badge = getBadgeConfig(a.type);
+                  return (
+                    <li
+                      key={a.id || idx}
+                      className="list-group-item d-flex justify-content-between align-items-start py-3"
+                    >
+                      <div className="d-flex gap-3 align-items-start">
+                        <span style={{ fontSize: '1.25rem' }}>{badge.icon}</span>
+                        <div>
+                          <span className={`badge bg-${badge.color} me-2`}>
+                            {badge.label}
+                          </span>
+                          <span>{a.description}</span>
+                          {a.status && (
+                            <span className="badge bg-light text-dark border ms-2">
+                              {a.status}
+                            </span>
+                          )}
+                          <div className="text-muted small mt-1">
+                            {formatDate(a.timestamp)}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
-
             </div>
           </div>
         )}
@@ -88,7 +95,8 @@ export default function Aktivitas() {
         {/* EMPTY */}
         {!loading && activities.length === 0 && (
           <div className="text-center py-5">
-            <h6 className="text-muted">Tidak ada aktivitas terbaru</h6>
+            <p style={{ fontSize: '2rem' }}>📭</p>
+            <h6 className="text-muted">Tidak ada aktivitas hari ini</h6>
           </div>
         )}
 

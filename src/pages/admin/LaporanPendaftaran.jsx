@@ -12,6 +12,8 @@ const LaporanPendaftaran = () => {
   const [filters, setFilters] = useState(initialFilters);
   const [laporan, setLaporan] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [error, setError] = useState('');
 
   const fetchLaporan = useCallback(async () => {
@@ -49,6 +51,57 @@ const LaporanPendaftaran = () => {
 
   const totalRegistrations = laporan.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportPdf = async () => {
+    setExporting(true);
+    setError('');
+
+    try {
+      const params = { ...filters };
+      Object.keys(params).forEach((key) => {
+        if (!params[key]) delete params[key];
+      });
+
+      const fileData = await laporanService.exportRegistrationPdf(params);
+      downloadBlob(fileData, 'laporan-pendaftaran.pdf');
+    } catch (err) {
+      console.error(err);
+      setError('Gagal mengekspor laporan pendaftaran ke PDF.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExportingExcel(true);
+    setError('');
+
+    try {
+      const params = { ...filters };
+      Object.keys(params).forEach((key) => {
+        if (!params[key]) delete params[key];
+      });
+
+      const fileData = await laporanService.exportRegistrationExcel(params);
+      downloadBlob(fileData, 'laporan-pendaftaran.csv');
+    } catch (err) {
+      console.error(err);
+      setError('Gagal mengekspor laporan pendaftaran ke Excel.');
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
   return (
     <AdminLayout title="Laporan Pendaftaran">
       <div className="dashboard-section">
@@ -85,6 +138,12 @@ const LaporanPendaftaran = () => {
           <div className="form-actions">
             <button type="button" className="btn" onClick={fetchLaporan}>
               Terapkan Filter
+            </button>
+            <button type="button" className="btn" onClick={handleExportPdf} disabled={exporting}>
+              {exporting ? 'Mengekspor PDF…' : 'Export PDF'}
+            </button>
+            <button type="button" className="btn" onClick={handleExportExcel} disabled={exportingExcel}>
+              {exportingExcel ? 'Mengekspor Excel…' : 'Export Excel'}
             </button>
             <button type="button" className="btn danger" onClick={resetFilters}>
               Reset Filter
