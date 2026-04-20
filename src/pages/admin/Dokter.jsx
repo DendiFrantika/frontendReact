@@ -7,7 +7,7 @@ import {
   requestWithFallback,
   unpackCollection,
 } from '../../services/adminCrudApi';
-import { validateDokterForm } from '../../services/adminMasterValidation';
+import { validateDokterForm, validateJadwalForm } from '../../services/adminMasterValidation';
 import './Dokter.css';
 
 const HARI_OPTIONS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -19,7 +19,14 @@ const defaultForm = {
   hari_libur: '', status: '',
 };
 
+const defaultJadwalForm = {
+  dokter_id: '', hari: '', jam_mulai: '', jam_selesai: '', kapasitas: 10,
+};
+
 export default function Dokter() {
+  const [activeTab, setActiveTab] = useState('dokter'); // 'dokter' | 'jadwal'
+
+  // --- state dokter (sama seperti sebelumnya) ---
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -34,6 +41,31 @@ export default function Dokter() {
   const [searchInput, setSearchInput] = useState('');
   const [searchDebounced, setSearchDebounced] = useState('');
 
+  // --- state jadwal ---
+  const [viewMode, setViewMode] = useState('hari');
+  const [schedules, setSchedules] = useState([]);
+  const [jadwalLoading, setJadwalLoading] = useState(false);
+  const [showJadwalForm, setShowJadwalForm] = useState(false);
+  const [jadwalForm, setJadwalForm] = useState(defaultJadwalForm);
+  const [editingJadwalId, setEditingJadwalId] = useState(null);
+  const [jadwalErrors, setJadwalErrors] = useState({});
+  const [jadwalSubmitLoading, setJadwalSubmitLoading] = useState(false);
+  const [deleteJadwalTarget, setDeleteJadwalTarget] = useState(null);
+  const [jadwalSubmitError, setJadwalSubmitError] = useState('');
+
+  const groupedByDay = schedules.reduce((acc, sch) => {
+  if (!acc[sch.hari]) acc[sch.hari] = [];
+  acc[sch.hari].push(sch);
+  return acc;
+}, {});
+
+const groupedByDoctor = schedules.reduce((acc, sch) => {
+  const name = sch.dokter?.nama || 'Dokter';
+  if (!acc[name]) acc[name] = [];
+  acc[name].push(sch);
+  return acc;
+}, {});
+
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(searchInput.trim()), 400);
     return () => clearTimeout(t);
@@ -46,20 +78,33 @@ export default function Dokter() {
     try {
       const res = await requestWithFallback([
         { method: 'get', url: '/admin/dokter', params },
-        { method: 'get', url: '/dokter', params },
       ]);
       setDoctors(unpackCollection(res.data));
     } catch (err) {
-      console.error('Error fetching doctors:', err.response?.data ?? err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }, [searchDebounced]);
 
-  useEffect(() => {
-    fetchDoctors();
-  }, [fetchDoctors]);
+  const fetchSchedules = useCallback(async () => {
+    setJadwalLoading(true);
+    try {
+      const res = await requestWithFallback([
+        { method: 'get', url: '/admin/jadwal' },
+      ]);
+      setSchedules(unpackCollection(res.data));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setJadwalLoading(false);
+    }
+  }, []);
 
+  useEffect(() => { fetchDoctors(); }, [fetchDoctors]);
+  useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
+
+  // ---- handler dokter (sama seperti sebelumnya, tidak berubah) ----
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -71,51 +116,26 @@ export default function Dokter() {
     setSubmitError('');
     setErrors({});
     const clientErrors = validateDokterForm(formData, { editing: Boolean(editingId) });
-    if (Object.keys(clientErrors).length > 0) {
-      setErrors(clientErrors);
-      return;
-    }
+    if (Object.keys(clientErrors).length > 0) { setErrors(clientErrors); return; }
     setSubmitLoading(true);
     try {
       if (editingId) {
         const { nama, spesialisasi, no_telepon, hari_libur, status } = formData;
         await requestWithFallback([
-          {
-            method: 'put',
-            url: `/admin/dokter/${editingId}`,
-            data: { nama, spesialisasi, no_telepon, hari_libur, status: Number(status) },
-          },
-          {
-            method: 'put',
-            url: `/admin/dokter/${editingId}`,
-            data: { nama, spesialisasi, no_telepon, hari_libur, status: Number(status) },
-          },
+          { method: 'put', url: `/admin/dokter/${editingId}`, data: { nama, spesialisasi, no_telepon, hari_libur, status: Number(status) } },
         ]);
       } else {
         await requestWithFallback([
-          {
-            method: 'post',
-            url: '/admin/dokter',
-            data: { ...formData, status: Number(formData.status) },
-          },
-          {
-            method: 'post',
-            url: '/admin/dokter',
-            data: { ...formData, status: Number(formData.status) },
-          },
+          { method: 'post', url: '/admin/dokter', data: { ...formData, status: Number(formData.status) } },
         ]);
       }
       await fetchDoctors();
       cancelForm();
       setNotice(editingId ? 'Data dokter berhasil diperbarui.' : 'Data dokter berhasil ditambahkan.');
     } catch (err) {
-      console.error('Error saving doctor:', err.response?.data ?? err);
       const fieldErrors = normalizeFieldErrors(err);
-      if (Object.keys(fieldErrors).length > 0) {
-        setErrors(fieldErrors);
-      } else {
-        setSubmitError(normalizeErrorMessage(err, 'Terjadi kesalahan, coba lagi.'));
-      }
+      if (Object.keys(fieldErrors).length > 0) setErrors(fieldErrors);
+      else setSubmitError(normalizeErrorMessage(err, 'Terjadi kesalahan, coba lagi.'));
     } finally {
       setSubmitLoading(false);
     }
@@ -125,16 +145,11 @@ export default function Dokter() {
     setEditingId(doc.id);
     setErrors({});
     setFormData({
-      nama: doc.nama ?? '',
-      no_identitas: doc.no_identitas ?? '',
-      spesialisasi: doc.spesialisasi ?? '',
-      no_lisensi: doc.no_lisensi ?? '',
-      no_telepon: doc.no_telepon ?? '',
-      email: doc.email ?? '',
-      alamat: doc.alamat ?? '',
-      jam_praktek_mulai: doc.jam_praktek_mulai ?? '',
-      jam_praktek_selesai: doc.jam_praktek_selesai ?? '',
-      hari_libur: doc.hari_libur ?? '',
+      nama: doc.nama ?? '', no_identitas: doc.no_identitas ?? '',
+      spesialisasi: doc.spesialisasi ?? '', no_lisensi: doc.no_lisensi ?? '',
+      no_telepon: doc.no_telepon ?? '', email: doc.email ?? '',
+      alamat: doc.alamat ?? '', jam_praktek_mulai: doc.jam_praktek_mulai ?? '',
+      jam_praktek_selesai: doc.jam_praktek_selesai ?? '', hari_libur: doc.hari_libur ?? '',
       status: doc.status === true || doc.status === 1 ? '1' : '0',
     });
     setShowForm(true);
@@ -145,12 +160,10 @@ export default function Dokter() {
     try {
       await requestWithFallback([
         { method: 'put', url: `/admin/dokter/${doc.id}`, data: { status: statusBaru } },
-        { method: 'put', url: `/dokter/${doc.id}`, data: { status: statusBaru } },
       ]);
       fetchDoctors();
       setNotice(`Status dokter ${doc.nama} berhasil diubah.`);
     } catch (err) {
-      console.error('Error toggle status:', err.response?.data ?? err);
       setSubmitError('Gagal mengubah status dokter.');
     }
   };
@@ -161,13 +174,11 @@ export default function Dokter() {
     try {
       await requestWithFallback([
         { method: 'delete', url: `/admin/dokter/${deleteTarget.id}` },
-        { method: 'delete', url: `/dokter/${deleteTarget.id}` },
       ]);
       await fetchDoctors();
       setDeleteTarget(null);
       setNotice('Data dokter berhasil dihapus.');
     } catch (err) {
-      console.error('Error deleting doctor:', err);
       setSubmitError('Gagal menghapus data dokter.');
     } finally {
       setDeleteLoading(false);
@@ -182,41 +193,279 @@ export default function Dokter() {
     setSubmitError('');
   };
 
+  // ---- handler jadwal ----
+  const handleJadwalChange = (e) => {
+    const { name, value } = e.target;
+    setJadwalForm((prev) => ({ ...prev, [name]: value }));
+    setJadwalErrors((prev) => ({ ...prev, [name]: null }));
+  };
+
+  const handleJadwalSubmit = async (e) => {
+    e.preventDefault();
+    setJadwalSubmitError('');
+    setJadwalErrors({});
+    const clientErrors = validateJadwalForm(jadwalForm);
+    if (Object.keys(clientErrors).length > 0) { setJadwalErrors(clientErrors); return; }
+    const payload = { ...jadwalForm, dokter_id: Number(jadwalForm.dokter_id), kapasitas: Number(jadwalForm.kapasitas) };
+    setJadwalSubmitLoading(true);
+    try {
+      if (editingJadwalId) {
+        await requestWithFallback([
+          { method: 'put', url: `/admin/jadwal/${editingJadwalId}`, data: payload },
+        ]);
+      } else {
+        await requestWithFallback([
+          { method: 'post', url: '/admin/jadwal', data: payload },
+        ]);
+      }
+      await fetchSchedules();
+      cancelJadwalForm();
+      setNotice(editingJadwalId ? 'Jadwal berhasil diperbarui.' : 'Jadwal berhasil ditambahkan.');
+    } catch (err) {
+      const fieldErrors = normalizeFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) setJadwalErrors(fieldErrors);
+      else setJadwalSubmitError(normalizeErrorMessage(err, 'Gagal menyimpan jadwal.'));
+    } finally {
+      setJadwalSubmitLoading(false);
+    }
+  };
+
+  const editJadwal = (sch) => {
+    setEditingJadwalId(sch.id);
+    setJadwalForm({
+      dokter_id: sch.dokter_id,
+      hari: sch.hari,
+      jam_mulai: sch.jam_mulai?.substring(0, 5) ?? '',
+      jam_selesai: sch.jam_selesai?.substring(0, 5) ?? '',
+      kapasitas: sch.kapasitas,
+    });
+    setShowJadwalForm(true);
+  };
+
+  const deleteJadwal = async () => {
+    if (!deleteJadwalTarget?.id) return;
+    try {
+      await requestWithFallback([
+        { method: 'delete', url: `/admin/jadwal/${deleteJadwalTarget.id}` },
+      ]);
+      await fetchSchedules();
+      setDeleteJadwalTarget(null);
+      setNotice('Jadwal berhasil dihapus.');
+    } catch (err) {
+      setJadwalSubmitError('Gagal menghapus jadwal.');
+    }
+  };
+
+  const cancelJadwalForm = () => {
+    setShowJadwalForm(false);
+    setEditingJadwalId(null);
+    setJadwalForm(defaultJadwalForm);
+    setJadwalErrors({});
+    setJadwalSubmitError('');
+  };
+
   const renderError = (field) =>
     errors[field] ? <small className="form-error">{errors[field][0]}</small> : null;
+
+  const renderJadwalError = (field) =>
+    jadwalErrors[field] ? <small className="form-error">{jadwalErrors[field][0] ?? jadwalErrors[field]}</small> : null;
 
   const isAktif = (status) => status === 1 || status === true;
 
   return (
     <AdminLayout title="Manajemen Dokter">
 
-      <div className="dokter-header">
-        <p className="dokter-subtitle">Total {doctors.length} dokter terdaftar</p>
-        <button className="btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setFormData(defaultForm); }}>
-          + Tambah Dokter
-        </button>
-      </div>
-
-      <div className="dokter-toolbar">
-        <label htmlFor="dokter-search">Cari</label>
-        <input
-          id="dokter-search"
-          className="dokter-search-input"
-          type="search"
-          placeholder="Cari nama atau spesialisasi…"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          autoComplete="off"
-        />
+      {/* TAB */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '0.5px solid var(--color-border-tertiary)', paddingBottom: '0' }}>
+        {[
+          { key: 'dokter', label: '👨‍⚕️ Data Dokter' },
+          { key: 'jadwal', label: '📅 Jadwal Kerja' },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderBottom: activeTab === tab.key ? '2px solid #185FA5' : '2px solid transparent',
+              background: 'transparent',
+              color: activeTab === tab.key ? '#185FA5' : 'var(--color-text-secondary)',
+              fontWeight: activeTab === tab.key ? 500 : 400,
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderRadius: 0,
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {notice && <div className="dokter-card"><p className="dokter-subtitle">{notice}</p></div>}
 
-      <AdminCrudModal
-        open={showForm}
-        title={editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'}
-        onClose={cancelForm}
-      >
+      {/* ===== TAB DOKTER ===== */}
+      {activeTab === 'dokter' && (
+        <>
+          <div className="dokter-header">
+            <p className="dokter-subtitle">Total {doctors.length} dokter terdaftar</p>
+            <button className="btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setFormData(defaultForm); }}>
+              + Tambah Dokter
+            </button>
+          </div>
+
+          <div className="dokter-toolbar">
+            <label htmlFor="dokter-search">Cari</label>
+            <input
+              id="dokter-search" className="dokter-search-input" type="search"
+              placeholder="Cari nama atau spesialisasi…"
+              value={searchInput} onChange={(e) => setSearchInput(e.target.value)} autoComplete="off"
+            />
+          </div>
+
+          {loading ? (
+            <p className="loading-text">Memuat data dokter...</p>
+          ) : (
+            <div className="dokter-card-table">
+              <table className="dokter-table">
+                <thead>
+                  <tr>
+                    <th>Nama</th><th>Spesialisasi</th><th>No. telepon</th>
+                    <th>Jam praktek</th><th>Hari libur</th><th>Status</th><th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {doctors.length === 0 ? (
+                    <tr><td colSpan="7"><div className="empty-state">Belum ada data dokter</div></td></tr>
+                  ) : (
+                    doctors.map((doc) => (
+                      <tr key={doc.id}>
+                        <td>
+                          <div className="nama-text">{doc.nama}</div>
+                          <div className="email-text">{doc.email}</div>
+                        </td>
+                        <td>{doc.spesialisasi}</td>
+                        <td>{doc.no_telepon}</td>
+                        <td><span className="jam-text">{doc.jam_praktek_mulai} – {doc.jam_praktek_selesai}</span></td>
+                        <td>{doc.hari_libur ?? '–'}</td>
+                        <td>
+                          <button
+                            className={isAktif(doc.status) ? 'badge-aktif badge-toggle' : 'badge-nonaktif badge-toggle'}
+                            onClick={() => toggleStatus(doc)} title="Klik untuk ubah status"
+                          >
+                            {isAktif(doc.status) ? 'Aktif' : 'Tidak aktif'}
+                          </button>
+                        </td>
+                        <td>
+                          <button className="btn-small" onClick={() => editDoctor(doc)}>Edit</button>
+                          <button className="btn-danger" onClick={() => setDeleteTarget(doc)}>Hapus</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ===== TAB JADWAL ===== */}
+      {activeTab === 'jadwal' && (
+        <>
+          <div className="dokter-header">
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <button
+            className={viewMode === 'hari' ? 'btn-primary' : 'btn-secondary'}
+            onClick={() => setViewMode('hari')}
+          >
+            Per Hari
+          </button>
+
+          <button
+            className={viewMode === 'dokter' ? 'btn-primary' : 'btn-secondary'}
+            onClick={() => setViewMode('dokter')}
+          >
+            Per Dokter
+          </button>
+        </div>
+            <p className="dokter-subtitle">Total {schedules.length} jadwal terdaftar</p>
+            <button className="btn-primary" onClick={() => { setShowJadwalForm(true); setEditingJadwalId(null); setJadwalForm(defaultJadwalForm); }}>
+              + Tambah Jadwal
+            </button>
+          </div>
+
+          {jadwalLoading ? (
+            <p className="loading-text">Memuat jadwal...</p>
+          ) : (
+          <div className="jadwal-container">
+
+  {/* ================= PER HARI ================= */}
+  {viewMode === 'hari' && HARI_OPTIONS.map(day => {
+    const list = groupedByDay[day];
+    if (!list) return null;
+
+    return (
+      <div key={day} className="dokter-card" style={{ marginBottom: 16 }}>
+        <h4>📅 {day}</h4>
+
+        {list.map((sch) => (
+          <div key={sch.id} style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '10px 0',
+            borderBottom: '1px solid #eee'
+          }}>
+            <div>
+              <b>{sch.dokter?.nama ?? '–'}</b>
+              <div>{sch.jam_mulai?.substring(0,5)} - {sch.jam_selesai?.substring(0,5)}</div>
+              <small>Kapasitas: {sch.kapasitas}</small>
+            </div>
+
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className="btn-small" onClick={() => editJadwal(sch)}>Edit</button>
+              <button className="btn-danger" onClick={() => setDeleteJadwalTarget(sch)}>Hapus</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  })}
+
+  {/* ================= PER DOKTER ================= */}
+  {viewMode === 'dokter' && Object.keys(groupedByDoctor).map(doc => (
+    <div key={doc} className="dokter-card" style={{ marginBottom: 16 }}>
+      <h4>👨‍⚕️ {doc}</h4>
+
+      {groupedByDoctor[doc].map((sch) => (
+        <div key={sch.id} style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '10px 0',
+          borderBottom: '1px solid #eee'
+        }}>
+          <div>
+            <b>{sch.hari}</b>
+            <div>{sch.jam_mulai?.substring(0,5)} - {sch.jam_selesai?.substring(0,5)}</div>
+            <small>Kapasitas: {sch.kapasitas}</small>
+          </div>
+
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="btn-small" onClick={() => editJadwal(sch)}>Edit</button>
+            <button className="btn-danger" onClick={() => setDeleteJadwalTarget(sch)}>Hapus</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  ))}
+
+</div>
+          )}
+        </>
+      )}
+
+      {/* MODAL FORM DOKTER (tidak berubah) */}
+      <AdminCrudModal open={showForm} title={editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'} onClose={cancelForm}>
         <div className="dokter-card">
           <p className="form-title">{editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'}</p>
           {submitError ? <p className="form-error">{submitError}</p> : null}
@@ -255,7 +504,6 @@ export default function Dokter() {
                 {renderError('status')}
               </div>
             </div>
-
             {!editingId && (
               <>
                 <hr className="form-divider" />
@@ -294,7 +542,6 @@ export default function Dokter() {
                 </div>
               </>
             )}
-
             <div className="form-actions">
               <button type="submit" className="btn-primary" disabled={submitLoading}>
                 {submitLoading ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
@@ -305,83 +552,107 @@ export default function Dokter() {
         </div>
       </AdminCrudModal>
 
-      {loading ? (
-        <p className="loading-text">Memuat data dokter...</p>
-      ) : (
-        <div className="dokter-card-table">
-          <table className="dokter-table">
-            <thead>
-              <tr>
-                <th>Nama</th>
-                <th>Spesialisasi</th>
-                <th>No. telepon</th>
-                <th>Jam praktek</th>
-                <th>Hari libur</th>
-                <th>Status</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {doctors.length === 0 ? (
-                <tr><td colSpan="7"><div className="empty-state">Belum ada data dokter</div></td></tr>
-              ) : (
-                doctors.map((doc) => (
-                  <tr key={doc.id}>
-                    <td>
-                      <div className="nama-text">{doc.nama}</div>
-                      <div className="email-text">{doc.email}</div>
-                    </td>
-                    <td>{doc.spesialisasi}</td>
-                    <td>{doc.no_telepon}</td>
-                    <td><span className="jam-text">{doc.jam_praktek_mulai} – {doc.jam_praktek_selesai}</span></td>
-                    <td>{doc.hari_libur ?? '–'}</td>
-                    <td>
-                      <button
-                        className={isAktif(doc.status) ? 'badge-aktif badge-toggle' : 'badge-nonaktif badge-toggle'}
-                        onClick={() => toggleStatus(doc)}
-                        title="Klik untuk ubah status"
-                      >
-                        {isAktif(doc.status) ? 'Aktif' : 'Tidak aktif'}
+      {/* MODAL FORM JADWAL */}
+      <AdminCrudModal open={showJadwalForm} title={editingJadwalId ? 'Edit Jadwal' : 'Tambah Jadwal'} onClose={cancelJadwalForm}>
+        <div style={{ padding: '4px 0' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-tertiary)', margin: '0 0 4px' }}>Jadwal Kerja</p>
+            <h2 style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>{editingJadwalId ? 'Edit Jadwal' : 'Tambah Jadwal'}</h2>
+          </div>
+          {jadwalSubmitError && (
+            <p style={{ fontSize: '13px', color: 'var(--color-text-danger)', background: 'var(--color-background-danger)', padding: '10px 14px', borderRadius: 'var(--border-radius-md)', marginBottom: '16px' }}>
+              {jadwalSubmitError}
+            </p>
+          )}
+          <form onSubmit={handleJadwalSubmit}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+                  Dokter <span style={{ color: 'var(--color-text-danger)' }}>*</span>
+                </label>
+                <select name="dokter_id" value={jadwalForm.dokter_id} onChange={handleJadwalChange} required
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: jadwalErrors.dokter_id ? '1px solid var(--color-border-danger)' : '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px' }}>
+                  <option value="">— Pilih dokter —</option>
+                  {doctors.map(d => <option key={d.id} value={d.id}>{d.nama}</option>)}
+                </select>
+                {renderJadwalError('dokter_id')}
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+                  Hari <span style={{ color: 'var(--color-text-danger)' }}>*</span>
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+                  {HARI_OPTIONS.map(day => {
+                    const selected = jadwalForm.hari === day;
+                    return (
+                      <button key={day} type="button"
+                        onClick={() => { setJadwalForm(f => ({ ...f, hari: day })); setJadwalErrors(p => ({ ...p, hari: null })); }}
+                        style={{ textAlign: 'center', padding: '8px 4px', borderRadius: 'var(--border-radius-md)', border: selected ? '2px solid #185FA5' : '0.5px solid var(--color-border-secondary)', background: selected ? '#E6F1FB' : 'transparent', color: selected ? '#0C447C' : 'var(--color-text-secondary)', fontSize: '12px', fontWeight: selected ? 500 : 400, cursor: 'pointer' }}>
+                        {day.substring(0, 3)}
                       </button>
-                    </td>
-                    <td>
-                      <button className="btn-small" onClick={() => editDoctor(doc)}>Edit</button>
-                      <button className="btn-danger" onClick={() => setDeleteTarget(doc)}>Hapus</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <AdminCrudModal
-        open={Boolean(deleteTarget)}
-        title="Konfirmasi Hapus Dokter"
-        onClose={() => setDeleteTarget(null)}
-        size="sm"
-      >
-        <p>Hapus data dokter <strong>{deleteTarget?.nama}</strong>?</p>
-        <div className="form-actions">
-          <button
-            type="button"
-            className="btn-danger"
-            onClick={deleteDoctor}
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => setDeleteTarget(null)}
-            disabled={deleteLoading}
-          >
-            Batal
-          </button>
+                    );
+                  })}
+                </div>
+                {renderJadwalError('hari')}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>Jam mulai *</label>
+                  <input type="time" name="jam_mulai" value={jadwalForm.jam_mulai} onChange={handleJadwalChange} required
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px', boxSizing: 'border-box' }} />
+                  {renderJadwalError('jam_mulai')}
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>Jam selesai *</label>
+                  <input type="time" name="jam_selesai" value={jadwalForm.jam_selesai} onChange={handleJadwalChange} required
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px', boxSizing: 'border-box' }} />
+                  {renderJadwalError('jam_selesai')}
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Kapasitas pasien</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="range" min="1" max="50" name="kapasitas" value={jadwalForm.kapasitas} onChange={handleJadwalChange} style={{ flex: 1 }} />
+                  <div style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-secondary)', borderRadius: 'var(--border-radius-md)', padding: '6px 14px', fontSize: '14px', fontWeight: 500, minWidth: '42px', textAlign: 'center' }}>
+                    {jadwalForm.kapasitas}
+                  </div>
+                </div>
+              </div>
+              <div style={{ borderTop: '0.5px solid var(--color-border-tertiary)', paddingTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={cancelJadwalForm} disabled={jadwalSubmitLoading}
+                  style={{ padding: '9px 20px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-secondary)', background: 'transparent', color: 'var(--color-text-secondary)', fontSize: '14px', cursor: 'pointer' }}>
+                  Batal
+                </button>
+                <button type="submit" disabled={jadwalSubmitLoading}
+                  style={{ padding: '9px 20px', borderRadius: 'var(--border-radius-md)', border: 'none', background: jadwalSubmitLoading ? 'var(--color-background-secondary)' : '#185FA5', color: jadwalSubmitLoading ? 'var(--color-text-secondary)' : '#fff', fontSize: '14px', fontWeight: 500, cursor: jadwalSubmitLoading ? 'not-allowed' : 'pointer' }}>
+                  {jadwalSubmitLoading ? 'Menyimpan...' : editingJadwalId ? 'Update jadwal' : 'Simpan jadwal'}
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </AdminCrudModal>
+
+      {/* MODAL HAPUS DOKTER */}
+      <AdminCrudModal open={Boolean(deleteTarget)} title="Konfirmasi Hapus Dokter" onClose={() => setDeleteTarget(null)} size="sm">
+        <p>Hapus data dokter <strong>{deleteTarget?.nama}</strong>?</p>
+        <div className="form-actions">
+          <button type="button" className="btn-danger" onClick={deleteDoctor} disabled={deleteLoading}>
+            {deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>Batal</button>
+        </div>
+      </AdminCrudModal>
+
+      {/* MODAL HAPUS JADWAL */}
+      <AdminCrudModal open={Boolean(deleteJadwalTarget)} title="Konfirmasi Hapus Jadwal" onClose={() => setDeleteJadwalTarget(null)} size="sm">
+        <p>Hapus jadwal <strong>{deleteJadwalTarget?.dokter?.nama}</strong> hari <strong>{deleteJadwalTarget?.hari}</strong>?</p>
+        <div className="form-actions">
+          <button type="button" className="btn-danger" onClick={deleteJadwal}>Ya, Hapus</button>
+          <button type="button" className="btn-secondary" onClick={() => setDeleteJadwalTarget(null)}>Batal</button>
+        </div>
+      </AdminCrudModal>
+
     </AdminLayout>
   );
 }

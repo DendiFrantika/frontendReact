@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import './Dashboard.css'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie } from 'recharts'; // npm install recharts
+import { BarChart,LineChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie } from 'recharts'; // npm install recharts
 import { Link } from 'react-router-dom';
 import { requestWithFallback } from '../../services/adminCrudApi';
 
@@ -27,6 +27,21 @@ const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('month');
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [kunjunganChart, setKunjunganChart] = useState([]);
+
+  const fetchAnalytics = useCallback(async () => {
+  try {
+    const res = await requestWithFallback([
+      { method: 'get', url: '/admin/analytics' }
+    ]);
+
+    setKunjunganChart(res.data.chart);
+
+  } catch (err) {
+    console.error('Gagal ambil analytics', err);
+    setKunjunganChart([]);
+  }
+}, []);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -126,7 +141,8 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData]);
+    fetchAnalytics();
+  }, [fetchDashboardData, fetchAnalytics]);
 
   // Auto-refresh setiap 5 menit
   useEffect(() => {
@@ -134,6 +150,7 @@ const AdminDashboard = () => {
       if (!loading && !refreshing) {
         fetchDashboardData();
         fetchChartData(timeRange);
+        fetchAnalytics();
       }
     }, 5 * 60 * 1000); // 5 minutes
 
@@ -379,6 +396,41 @@ const AdminDashboard = () => {
                 )}
               </div>
             </div>
+                      {/* Grafik Kunjungan Pasien */}
+          <div className="chart-container">
+            <div className="chart-header">
+              <h2>Grafik Kunjungan Pasien (7 Hari Terakhir)</h2>
+            </div>
+
+            <div style={{ height: '300px' }}>
+              {kunjunganChart.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={kunjunganChart}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hari" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="pasien"
+                      stroke="#0d6efd"
+                      strokeWidth={3}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: '#7f8c8d'
+                }}>
+                  Belum ada data kunjungan
+                </div>
+              )}
+            </div>
+          </div>
           </>
         )}
     </AdminLayout>
