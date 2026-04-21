@@ -1,12 +1,18 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './DokterLayout.css';
 
 const DokterLayout = ({ title, children }) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const userName = String(user?.nama || user?.name || 'Dokter');
   const userInitial = userName.charAt(0)?.toUpperCase() || 'D';
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="dokter-layout">
@@ -41,10 +47,7 @@ const DokterLayout = ({ title, children }) => {
               <p className="user-role">Dokter</p>
             </div>
           </div>
-          <button className="logout-btn" onClick={() => {
-            logout();
-            window.location.href = '/login';
-          }}>
+          <button className="logout-btn" onClick={handleLogout}>
             <span>🚪 Logout</span>
           </button>
         </div>
@@ -62,3 +65,4 @@ const DokterLayout = ({ title, children }) => {
 };
 
 export default DokterLayout;
+
