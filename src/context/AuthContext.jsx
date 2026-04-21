@@ -40,59 +40,39 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // ⭐ penting
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
+  const initAuth = async () => {
+    try {
+      const token = localStorage.getItem('token');
 
-        if (token) {
-          try {
-            const res = await authService.getCurrentUser({ bootstrap: true });
-            const userData = extractUserPayload(res);
-            let mappedRole = null;
-            try {
-              mappedRole = storedUser ? JSON.parse(storedUser).role : null;
-            } catch {
-              mappedRole = null;
-            }
-            if (typeof mappedRole === 'string') {
-              mappedRole = mappedRole.trim().toLowerCase();
-            }
-
-            const normalized = normalizeUserRole(userData, mappedRole);
-            setUser(normalized);
-            localStorage.setItem('user', JSON.stringify(normalized));
-          } catch (e) {
-            const status = e?.response?.status;
-            console.warn('Auto login validation failed (token may be expired)', e);
-
-            if (status === 401 || status === 403) {
-              setUser(null);
-            } else if (storedUser) {
-              try {
-                setUser(normalizeUserRole(JSON.parse(storedUser)));
-              } catch {
-                setUser(null);
-              }
-            } else {
-              setUser(null);
-            }
-          }
-        } else if (storedUser) {
-          try {
-            localStorage.removeItem('user');
-          } catch {
-            /* noop */
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to parse or load stored user', err);
-      } finally {
-        setLoading(false); // ⭐ selesai loading
+      // 🔥 STOP TOTAL kalau tidak ada token
+      if (!token) {
+        setUser(null);
+        return;
       }
-    };
-    initAuth();
-  }, []);
+
+      // ✅ validasi ke backend
+      const res = await authService.getCurrentUser({ bootstrap: true });
+
+      const userData = extractUserPayload(res);
+      const normalized = normalizeUserRole(userData);
+
+      setUser(normalized);
+      localStorage.setItem('user', JSON.stringify(normalized));
+
+    } catch (e) {
+      console.warn('Token invalid:', e);
+
+      // 🔥 WAJIB CLEAR kalau gagal
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  initAuth();
+}, []);
 
   const login = useCallback((userData, fallbackRole) => {
 
@@ -109,22 +89,21 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await authService.logout();
-    } catch (err) {
-      console.warn('Backend logout failed', err);
-    }
-    
-    setUser(null);
+  try {
+    await authService.logout();
+  } catch (err) {
+    console.warn('Backend logout failed', err);
+  }
 
-    try {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    } catch (err) {
-      console.warn('Failed to clear storage on logout', err);
-    }
+  // 🔥 CLEAR TOTAL
+  localStorage.clear();
 
-  }, []);
+  // 🔥 RESET STATE
+  setUser(null);
+
+  // 🔥 HARD RELOAD (WAJIB)
+  window.location.href = '/login';
+}, []);
 
   const isAuthenticated = !!user;
 

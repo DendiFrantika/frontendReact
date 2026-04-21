@@ -15,17 +15,23 @@ export default function DashboardDokter() {
   }, []);
 
   const fetchDashboardData = async () => {
-    try {
-      const [statsRes] = await Promise.all([
-        axiosInstance.get('/dokter/stats')
-      ]);
-      setStats(statsRes.data);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const res = await axiosInstance.get('/dokter/dashboard');
+
+    const data = res.data?.data ?? res.data;
+
+    setStats({
+      todayAppointments: data.todayAppointments || 0,
+      pendingDiagnoses: data.pendingDiagnoses || 0,
+      completedToday: data.completedToday || 0,
+    });
+
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <DokterLayout title="Dashboard Dokter">
