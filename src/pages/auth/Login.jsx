@@ -8,7 +8,7 @@ import { getRoleFromResponse, normalizeUserPayload } from './authRoles';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
+  // const { login, isAuthenticated, user } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -37,13 +37,18 @@ export default function Login() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!isAuthenticated || !user?.role) return;
-    const r = String(user.role).toLowerCase();
-    if (r === 'admin') navigate('/admin', { replace: true });
-    else if (r === 'dokter') navigate('/dokter', { replace: true });
-    else navigate('/pasien', { replace: true });
-  }, [isAuthenticated, user, navigate]);
+  const { login, isAuthenticated, user, loading } = useAuth();
+
+    useEffect(() => {
+      if (loading) return; // ⛔ tahan dulu
+
+      if (!isAuthenticated || !user?.role) return;
+
+      const r = String(user.role).toLowerCase();
+      if (r === 'admin') navigate('/admin', { replace: true });
+      else if (r === 'dokter') navigate('/dokter', { replace: true });
+      else navigate('/pasien', { replace: true });
+    }, [isAuthenticated, user, loading, navigate]);
 
   const closeSessionModal = () => {
     setSessionExpiredOpen(false);
