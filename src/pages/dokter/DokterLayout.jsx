@@ -1,11 +1,21 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import {
+  FaTachometerAlt,
+  FaUserInjured,
+  FaNotesMedical,
+  FaCalendarAlt,
+  FaHistory,
+  FaUserCircle,
+  FaSignOutAlt
+} from 'react-icons/fa';
 import './DokterLayout.css';
 
 const DokterLayout = ({ title, children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
   const userName = String(user?.nama || user?.name || 'Dokter');
   const userInitial = userName.charAt(0)?.toUpperCase() || 'D';
 
@@ -17,41 +27,77 @@ const DokterLayout = ({ title, children }) => {
   return (
     <div className="dokter-layout">
       <aside className="dokter-sidebar">
+
         <div className="sidebar-header">
-          <h3>Menu Dokter</h3>
+          <h3>Dashboard Dokter</h3>
         </div>
+
         <nav className="sidebar-nav">
           <ul>
+
             <li>
-              <Link to="/dokter" className="sidebar-link">Dashboard</Link>
+              <Link to="/dokter" className="sidebar-link">
+                <FaTachometerAlt /> Dashboard
+              </Link>
             </li>
+
             <li>
-              <Link to="/dokter/antrian" className="sidebar-link">Antrian</Link>
+              <Link to="/dokter/antrian" className="sidebar-link">
+                <FaUserInjured /> Antrian
+              </Link>
             </li>
+
             <li>
-              <Link to="/dokter/diagnosis" className="sidebar-link">Diagnosis</Link>
+              <Link to="/dokter/diagnosis" className="sidebar-link">
+                <FaNotesMedical /> Diagnosis
+              </Link>
             </li>
+
             <li>
-              <Link to="/dokter/jadwal" className="sidebar-link">Jadwal</Link>
+              <Link to="/dokter/jadwal" className="sidebar-link">
+                <FaCalendarAlt /> Jadwal
+              </Link>
             </li>
+
             <li>
-              <Link to="/dokter/riwayat" className="sidebar-link">Riwayat</Link>
+              <Link to="/dokter/riwayat" className="sidebar-link">
+                <FaHistory /> Riwayat
+              </Link>
             </li>
+
+            {/* <li>
+              <Link to="/dokter/profile" className="sidebar-link">
+                <FaUserCircle /> Profile
+              </Link>
+            </li> */}
+
           </ul>
         </nav>
+
         <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">{userInitial}</div>
-            <div className="user-details">
-              <p className="user-name">{userName}</p>
-              <p className="user-role">Dokter</p>
-            </div>
-          </div>
+          <button
+              className="user-info user-profile-btn"
+              onClick={() => navigate('/dokter/profile')}
+            >
+              <div className="user-avatar">{userInitial}</div>
+
+              <div className="user-details">
+                <p className="user-name">{userName}</p>
+                <p className="user-role">Klik untuk Profile</p>
+              </div>
+
+              <FaUserCircle style={{ marginLeft: 'auto', color: '#4f46e5' }} />
+            </button>
+
+
           <button className="logout-btn" onClick={handleLogout}>
-            <span>🚪 Logout</span>
+            <FaSignOutAlt style={{ marginRight: 6 }} />
+            Logout
           </button>
         </div>
+
       </aside>
+
       <main className="dokter-content">
         {title && (
           <div className="dokter-page-header">
@@ -65,4 +111,3 @@ const DokterLayout = ({ title, children }) => {
 };
 
 export default DokterLayout;
-
