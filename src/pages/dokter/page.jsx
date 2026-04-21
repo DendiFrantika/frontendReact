@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import DokterLayout from './DokterLayout';
 import axiosInstance from '../../api/axios';
 
@@ -8,39 +9,104 @@ export default function DashboardDokter() {
     pendingDiagnoses: 0,
     completedToday: 0,
   });
+
+  const [dokter, setDokter] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
+  // greeting otomatis
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Selamat pagi';
+    if (hour < 18) return 'Selamat siang';
+    return 'Selamat malam';
+  };
+
+  const fetchDashboardData = useCallback(async (signal) => {
+    if (!isAuthenticated || authLoading) return;
+
+    try {
+      setError(null);
+
+      const res = await axiosInstance.get('/dokter/stats', { signal });
+
+      setStats({
+        todayAppointments: res.data.todayAppointments || 0,
+        pendingDiagnoses: res.data.pendingDiagnoses || 0,
+        completedToday: res.data.completedToday || 0,
+      });
+
+      setDokter(res.data.dokter || null);
+
+    } catch (err) {
+      if (!signal?.aborted) {
+        console.error('Error dashboard:', err);
+        setError('Gagal memuat data dashboard');
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    const controller = new AbortController();
+    fetchDashboardData(controller.signal);
 
-  const fetchDashboardData = async () => {
-    try {
-      const [statsRes] = await Promise.all([
-        axiosInstance.get('/dokter/stats')
-      ]);
-      setStats(statsRes.data);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // 🔥 realtime auto refresh tiap 10 detik
+    const interval = setInterval(() => {
+      fetchDashboardData(controller.signal);
+    }, 10000);
+
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
+  }, [fetchDashboardData]);
+
+  if (authLoading) {
+    return (
+      <DokterLayout title="Dashboard Dokter">
+        <p>Memuat autentikasi...</p>
+      </DokterLayout>
+    );
+  }
+
+  if (!isAuthenticated) return null;
 
   return (
     <DokterLayout title="Dashboard Dokter">
+
+      {/* HEADER */}
       <div className="dashboard-header">
-        <h1>Selamat Datang, Dokter</h1>
+        <h1>
+          {getGreeting()}, Dokter {dokter?.nama || '-'}
+        </h1>
         <p>Ringkasan aktivitas hari ini</p>
       </div>
 
-      {loading ? (
-        <div className="loading">
-          <div className="spinner"></div>
-          Memuat data...
+      {/* ERROR */}
+      {error && (
+        <div style={{
+          padding: 12,
+          background: '#FEE2E2',
+          color: '#991B1B',
+          borderRadius: 8,
+          marginBottom: 12
+        }}>
+          {error}
         </div>
+      )}
+
+      {/* LOADING */}
+      {loading ? (
+        <p>Memuat data dashboard...</p>
       ) : (
         <div className="stats-grid">
+
           <div className="stat-card">
             <div className="stat-icon">📅</div>
             <div className="stat-info">
@@ -64,8 +130,10 @@ export default function DashboardDokter() {
               <p className="stat-value">{stats.completedToday}</p>
             </div>
           </div>
+
         </div>
       )}
+
     </DokterLayout>
   );
 }

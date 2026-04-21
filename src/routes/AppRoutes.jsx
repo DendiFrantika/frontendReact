@@ -42,6 +42,8 @@ import AntrianDokter from '../pages/dokter/antrian/page';
 import Diagnosis from '../pages/dokter/diagnosis/page';
 import JadwalDokter from '../pages/dokter/jadwal/page';
 import RiwayatDokter from '../pages/dokter/riwayat/page';
+import RekamMedisDokter from "../pages/dokter/RekamMedis";
+import ProfileDokter from '../pages/dokter/ProfileDokter';
 
 const AppRoutes = () => {
   return (
@@ -87,6 +89,9 @@ const AppRoutes = () => {
       <Route path="/dokter/diagnosis" element={<PrivateRoute role="dokter"><Diagnosis /></PrivateRoute>} />
       <Route path="/dokter/jadwal" element={<PrivateRoute role="dokter"><JadwalDokter /></PrivateRoute>} />
       <Route path="/dokter/riwayat" element={<PrivateRoute role="dokter"><RiwayatDokter /></PrivateRoute>} />
+      <Route path="/dokter/rekam-medis/:pendaftaran_id" element={<PrivateRoute role="dokter"><RekamMedisDokter /></PrivateRoute>} />
+      <Route path="/dokter/profile" element={<PrivateRoute role="dokter"><ProfileDokter /></PrivateRoute>} />
+      
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -98,14 +98,54 @@ export function normalizeQueueRow(raw, idx) {
 
 export function normalizeHistoryRow(raw, idx) {
   const r = raw || {};
+
   return {
     id: r.id ?? `h-${idx}`,
-    date: pick(r.date, r.tanggal, r.visit_date, r.appointment_date) ?? '—',
-    doctorName: pick(r.doctorName, r.doctor_name, r.nama_dokter, r.dokter?.nama) ?? '—',
-    specialty: pick(r.specialty, r.spesialisasi, r.dokter?.spesialisasi) ?? '—',
-    status: pick(r.status, r.keterangan, r.state) ?? '—',
-    diagnosis: pick(r.diagnosis, r.keluhan, r.keterangan_diagnosa, r.rekam_medis?.diagnosis) ?? 'Belum ada diagnosis',
-    complaint: pick(r.keluhan, r.keluhan_utama, r.rekam_medis?.keluhan_utama) ?? '—',
+
+    // ✅ FIX TANGGAL
+    date: pick(
+      r.tanggal_pendaftaran,
+      r.tanggal_kunjungan,
+      r.date,
+      r.tanggal,
+      r.visit_date,
+      r.appointment_date,
+      r.created_at
+    ) ?? null,
+
+    // optional (biar bisa gabung jam nanti)
+    time: r.jam_kunjungan ?? null,
+
+    doctorName: pick(
+      r.doctorName,
+      r.doctor_name,
+      r.nama_dokter,
+      r.dokter?.nama
+    ) ?? '—',
+
+    specialty: pick(
+      r.specialty,
+      r.spesialisasi,
+      r.dokter?.spesialisasi
+    ) ?? '—',
+
+    status: pick(
+      r.status,
+      r.keterangan,
+      r.state
+    ) ?? '—',
+
+    diagnosis: pick(
+      r.diagnosis,
+      r.keterangan_diagnosa,
+      r.rekam_medis?.diagnosis
+    ) ?? 'Belum ada diagnosis',
+
+    complaint: pick(
+      r.keluhan,
+      r.keluhan_utama,
+      r.rekam_medis?.keluhan_utama
+    ) ?? '—',
   };
 }
 

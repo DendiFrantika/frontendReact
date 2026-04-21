@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import DokterLayout from '../DokterLayout';
 import axiosInstance from '../../../api/axios';
 
@@ -8,38 +7,23 @@ export default function Diagnosis() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    pasienId: '',
-    keluhanUtama: '',
+    patientId: '',
     diagnosis: '',
-    anamnesis: '',
-    pemeriksaanFisik: '',
-    hasilLaboratorium: '',
-    resep: '',
-    tindakan: '',
-    catatanDokter: ''
+    treatment: '',
+    notes: ''
   });
-
-  const [searchParams] = useSearchParams();
-  const pasienIdParam = searchParams.get('pasienId') || '';
 
   useEffect(() => {
     fetchDiagnoses();
   }, []);
 
-  useEffect(() => {
-    if (pasienIdParam) {
-      setFormData(prev => ({ ...prev, pasienId: pasienIdParam }));
-    }
-  }, [pasienIdParam]);
-
-  const fetchDiagnoses = async () => {
+  const fetchRecords = async (p = 1) => {
     setLoading(true);
     try {
       const res = await axiosInstance.get('/dokter/diagnosis');
-      setDiagnoses(res.data?.data || res.data || []);
+      setDiagnoses(res.data);
     } catch (err) {
       console.error('Error fetching diagnoses:', err);
-      setDiagnoses([]);
     } finally {
       setLoading(false);
     }
@@ -52,30 +36,10 @@ export default function Diagnosis() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.post('/dokter/diagnosis', {
-        pasien_id: formData.pasienId,
-        keluhan_utama: formData.keluhanUtama,
-        diagnosis: formData.diagnosis,
-        anamnesis: formData.anamnesis,
-        pemeriksaan_fisik: formData.pemeriksaanFisik,
-        hasil_laboratorium: formData.hasilLaboratorium,
-        resep: formData.resep,
-        tindakan: formData.tindakan,
-        catatan_dokter: formData.catatanDokter,
-      });
+      await axiosInstance.post('/dokter/diagnosis', formData);
       fetchDiagnoses();
       setShowForm(false);
-      setFormData({
-        pasienId: '',
-        keluhanUtama: '',
-        diagnosis: '',
-        anamnesis: '',
-        pemeriksaanFisik: '',
-        hasilLaboratorium: '',
-        resep: '',
-        tindakan: '',
-        catatanDokter: ''
-      });
+      setFormData({ patientId: '', diagnosis: '', treatment: '', notes: '' });
     } catch (err) {
       console.error('Error saving diagnosis:', err);
     }
@@ -89,23 +53,12 @@ export default function Diagnosis() {
 
       {showForm && (
         <form className="form" onSubmit={handleSubmit}>
-              <div className="form-group">
+          <div className="form-group">
             <label>ID Pasien</label>
             <input
               type="text"
-              name="pasienId"
-              value={formData.pasienId}
-              onChange={handleChange}
-              required
-              readOnly={Boolean(pasienIdParam)}
-              placeholder={pasienIdParam ? 'ID pasien diambil dari antrian check-in' : 'Masukkan ID pasien'}
-            />
-          </div>
-          <div className="form-group">
-            <label>Keluhan Utama</label>
-            <textarea
-              name="keluhanUtama"
-              value={formData.keluhanUtama}
+              name="patientId"
+              value={formData.patientId}
               onChange={handleChange}
               required
             />
@@ -120,50 +73,19 @@ export default function Diagnosis() {
             />
           </div>
           <div className="form-group">
-            <label>Anamnesis</label>
+            <label>Pengobatan</label>
             <textarea
-              name="anamnesis"
-              value={formData.anamnesis}
+              name="treatment"
+              value={formData.treatment}
               onChange={handleChange}
+              required
             />
           </div>
           <div className="form-group">
-            <label>Pemeriksaan Fisik</label>
+            <label>Catatan</label>
             <textarea
-              name="pemeriksaanFisik"
-              value={formData.pemeriksaanFisik}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Hasil Laboratorium</label>
-            <textarea
-              name="hasilLaboratorium"
-              value={formData.hasilLaboratorium}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Resep</label>
-            <textarea
-              name="resep"
-              value={formData.resep}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Tindakan</label>
-            <textarea
-              name="tindakan"
-              value={formData.tindakan}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Catatan Dokter</label>
-            <textarea
-              name="catatanDokter"
-              value={formData.catatanDokter}
+              name="notes"
+              value={formData.notes}
               onChange={handleChange}
             />
           </div>
@@ -171,8 +93,7 @@ export default function Diagnosis() {
             <button type="submit" className="btn primary">Simpan</button>
             <button type="button" className="btn" onClick={() => setShowForm(false)}>Batal</button>
           </div>
-        </form>
-      )}
+        )}
 
       {loading ? (
         <p>Memuat diagnosis...</p>
@@ -181,30 +102,18 @@ export default function Diagnosis() {
           <thead>
             <tr>
               <th>Pasien</th>
-              <th>Keluhan Utama</th>
               <th>Diagnosis</th>
-              <th>Anamnesis</th>
-              <th>Pemeriksaan Fisik</th>
-              <th>Hasil Laboratorium</th>
-              <th>Resep</th>
-              <th>Tindakan</th>
-              <th>Catatan Dokter</th>
+              <th>Pengobatan</th>
               <th>Tanggal</th>
             </tr>
           </thead>
           <tbody>
             {diagnoses.map((diag) => (
               <tr key={diag.id}>
-                <td>{diag.pasien?.nama ?? diag.pasien_name ?? diag.pasien_id}</td>
-                <td>{diag.keluhan_utama}</td>
+                <td>{diag.patientName}</td>
                 <td>{diag.diagnosis}</td>
-                <td>{diag.anamnesis}</td>
-                <td>{diag.pemeriksaan_fisik}</td>
-                <td>{diag.hasil_laboratorium}</td>
-                <td>{diag.resep}</td>
-                <td>{diag.tindakan}</td>
-                <td>{diag.catatan_dokter}</td>
-                <td>{diag.tanggal_kunjungan ? new Date(diag.tanggal_kunjungan).toLocaleDateString() : ''}</td>
+                <td>{diag.treatment}</td>
+                <td>{new Date(diag.createdAt).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

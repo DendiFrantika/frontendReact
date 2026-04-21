@@ -130,7 +130,12 @@ export default function Riwayat() {
               <tbody>
                 {history.map((h) => (
                   <tr key={h.id}>
-                    <td>{h.date}</td>
+                    <td>
+                      {h.date
+                        ? new Date(h.date).toLocaleDateString('id-ID') +
+                          (h.time ? ` • ${h.time}` : '')
+                        : '-'}
+                    </td>
                     <td>{h.doctorName}</td>
                     <td>{h.specialty}</td>
                     <td>{h.complaint}</td>
