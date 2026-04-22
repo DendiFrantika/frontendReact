@@ -125,52 +125,231 @@
   cursor: pointer;
 }
 
-/* table */
+/* =========================
+   TABLE FULL BORDER (GRID)
+========================= */
 .table {
   width: 100%;
   border-collapse: collapse;
   background: white;
   border-radius: 10px;
   overflow: hidden;
+  table-layout: fixed;
+
+  border: 1px solid #e5e7eb; /* OUTER BORDER */
 }
 
-.table th,
-.table td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-}
-
+/* HEADER */
 .table th {
   background-color: #f3f4f6;
   text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
 }
 
-/* tombol aksi */
-.btn-edit {
-  background-color: #f59e0b;
-  color: white;
-  border: none;
-  padding: 6px 10px;
+/* CELL */
+.table th,
+.table td {
+  padding: 10px;
+  vertical-align: middle;
+
+  /* GARIS GRID */
+  border: 1px solid #e5e7eb;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================
+   FLEX WIDTH (ANTI SCROLL)
+========================= */
+
+/* No */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 5%;
+}
+
+/* Nama */
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 20%;
+}
+
+/* Umur */
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 8%;
+}
+
+/* JK */
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  width: 10%;
+}
+
+/* Telepon */
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 15%;
+}
+
+/* Email */
+.table th:nth-child(6),
+.table td:nth-child(6) {
+  width: 18%;
+}
+
+/* Gol Darah */
+.table th:nth-child(7),
+.table td:nth-child(7) {
+  width: 8%;
+  text-align: center;
+}
+
+/* Aksi */
+.table th:nth-child(8),
+.table td:nth-child(8) {
+  width: 16%;
+}
+
+/* =========================
+   NAMA + EMAIL STYLE
+========================= */
+.nama-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.nama {
+  font-weight: 600;
+  color: #111827;
+}
+
+.email {
+  font-size: 12px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================
+   AKSI BUTTON
+========================= */
+.aksi-group {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-edit,
+.btn-delete {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
   border-radius: 6px;
-  margin-right: 5px;
-  cursor: pointer;
+  white-space: nowrap;
 }
 
-.btn-edit:hover {
-  background-color: #d97706;
+/* warna */
+.btn-edit {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
 }
 
 .btn-delete {
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  padding: 6px 10px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+/* =========================
+   SUPER IMPORTANT FIX
+========================= */
+
+/* Biar tidak pernah overflow */
+.container {
+  overflow-x: hidden;
+}
+
+/* Pastikan wrapper gak maksa scroll */
+.table-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* =========================
+   AKSI BUTTON
+========================= */
+.aksi-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap; /* biar turun kalau sempit */
+}
+
+/* =========================
+   BUTTON LEBIH KECIL & RAPI
+========================= */
+.btn-edit,
+.btn-delete {
+  height: 28px;           /* lebih pendek */
+  padding: 0 8px;         /* lebih kecil */
+  font-size: 12px;        /* teks lebih kecil */
   border-radius: 6px;
-  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* biar jarak antar tombol pas */
+.aksi-group {
+  display: flex;
+  gap: 4px; /* sebelumnya 6-8, sekarang lebih rapat */
+}
+/* warna */
+.btn-edit {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.btn-delete {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+.btn-edit:hover {
+  background: #e5e7eb;
 }
 
 .btn-delete:hover {
-  background-color: #dc2626;
+  background: #fecaca;
+}
+
+/* =========================
+   RESPONSIVE FIX
+========================= */
+@media (max-width: 768px) {
+  .table {
+    font-size: 12px;
+  }
+
+  /* sembunyikan kolom email di HP */
+  .table th:nth-child(6),
+  .table td:nth-child(6) {
+    display: none;
+  }
+
+  .aksi-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    width: 100%;
+  }
 }
 
 /* Pagination Styles */
