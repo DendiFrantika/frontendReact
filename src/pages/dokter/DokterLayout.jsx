@@ -75,18 +75,24 @@ const DokterLayout = ({ title, children }) => {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">{userInitial}</div>
-            <div className="user-details">
-              <p className="user-name">{userName}</p>
-              <p className="user-role">Dokter</p>
-            </div>
-          </div>
-          <button className="logout-btn" onClick={() => {
-            logout();
-            window.location.href = '/login';
-          }}>
-            <span>🚪 Logout</span>
+          <button
+              className="user-info user-profile-btn"
+              onClick={() => navigate('/dokter/profile')}
+            >
+              <div className="user-avatar">{userInitial}</div>
+
+              <div className="user-details">
+                <p className="user-name">{userName}</p>
+                <p className="user-role">Klik untuk Profile</p>
+              </div>
+
+              <FaUserCircle style={{ marginLeft: 'auto', color: '#4f46e5' }} />
+            </button>
+
+
+          <button className="logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt style={{ marginRight: 6 }} />
+            Logout
           </button>
         </div>
 
