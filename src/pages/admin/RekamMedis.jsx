@@ -444,9 +444,9 @@ export default function RekamMedis() {
                       <td style={tdStyle}>{item.diagnosis ?? '-'}</td>
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => setModalDetail(item)} style={btnActionStyle('#3B82F6')}>🔍 Detail</button>
-                          <button onClick={() => setModalForm({ mode: 'edit', data: item })} style={btnActionStyle('#F59E0B')}>✏️ Edit</button>
-                          <button onClick={() => setDeleteId(Number(item.id))} style={btnActionStyle('#EF4444')}>🗑️ Hapus</button>
+                          <button onClick={() => setModalDetail(item)} style={btnActionStyle('#3B82F6')}> Detail</button>
+                          <button onClick={() => setModalForm({ mode: 'edit', data: item })} style={btnActionStyle('#F59E0B')}> Edit</button>
+                          <button onClick={() => setDeleteId(Number(item.id))} style={btnActionStyle('#EF4444')}> Hapus</button>
                         </div>
                       </td>
                     </tr>

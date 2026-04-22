@@ -4,23 +4,90 @@ import DokterLayout from './DokterLayout';
 import axiosInstance from '../../api/axios';
 
 const ICD10_DATA = [
-  { code: 'A00',   desc: 'Cholera' },
-  { code: 'A09',   desc: 'Diare dan gastroenteritis' },
-  { code: 'B34.9', desc: 'Infeksi virus, tidak spesifik' },
-  { code: 'E11',   desc: 'Diabetes mellitus tipe 2' },
-  { code: 'I10',   desc: 'Hipertensi esensial (primer)' },
-  { code: 'J00',   desc: 'Nasopharyngitis akut (common cold)' },
-  { code: 'J06.9', desc: 'Infeksi saluran napas atas akut, tidak spesifik' },
-  { code: 'J11',   desc: 'Influenza, virus tidak teridentifikasi' },
-  { code: 'K21',   desc: 'Penyakit refluks gastroesofageal' },
-  { code: 'K29',   desc: 'Gastritis dan duodenitis' },
-  { code: 'L20',   desc: 'Dermatitis atopik' },
-  { code: 'M54.5', desc: 'Nyeri punggung bawah' },
-  { code: 'N39.0', desc: 'Infeksi saluran kemih, tidak spesifik' },
-  { code: 'R05',   desc: 'Batuk' },
-  { code: 'R50',   desc: 'Demam, penyebab tidak diketahui' },
-  { code: 'R51',   desc: 'Sakit kepala' },
-  { code: 'Z00.0', desc: 'Pemeriksaan kesehatan umum' },
+  // ── Karies Gigi ──
+  { code: 'K02.0', desc: 'Karies gigi terbatas pada email' },
+  { code: 'K02.1', desc: 'Karies gigi pada dentin' },
+  { code: 'K02.2', desc: 'Karies gigi pada sementum' },
+  { code: 'K02.3', desc: 'Karies gigi yang terhenti' },
+  { code: 'K02.8', desc: 'Karies gigi lainnya' },
+  { code: 'K02.9', desc: 'Karies gigi, tidak spesifik' },
+
+  // ── Penyakit Pulpa & Periapikal ──
+  { code: 'K04.0', desc: 'Pulpitis' },
+  { code: 'K04.1', desc: 'Nekrosis pulpa' },
+  { code: 'K04.2', desc: 'Degenerasi pulpa' },
+  { code: 'K04.4', desc: 'Periodontitis apikal akut akibat pulpa' },
+  { code: 'K04.5', desc: 'Periodontitis apikal kronis (granuloma apikal)' },
+  { code: 'K04.6', desc: 'Abses periapikal dengan sinus' },
+  { code: 'K04.7', desc: 'Abses periapikal tanpa sinus' },
+  { code: 'K04.8', desc: 'Kista radikular (kista periapikal)' },
+
+  // ── Penyakit Gingiva & Periodontal ──
+  { code: 'K05.0', desc: 'Gingivitis akut' },
+  { code: 'K05.1', desc: 'Gingivitis kronis' },
+  { code: 'K05.2', desc: 'Periodontitis akut' },
+  { code: 'K05.3', desc: 'Periodontitis kronis' },
+  { code: 'K05.4', desc: 'Periodontosis' },
+  { code: 'K05.5', desc: 'Penyakit periodontal lainnya' },
+  { code: 'K05.6', desc: 'Penyakit periodontal, tidak spesifik' },
+
+  // ── Kelainan Perkembangan Gigi ──
+  { code: 'K00.0', desc: 'Anodontia (tidak ada gigi)' },
+  { code: 'K00.1', desc: 'Gigi supernumerari (gigi berlebih)' },
+  { code: 'K00.2', desc: 'Kelainan ukuran dan bentuk gigi' },
+  { code: 'K00.3', desc: 'Gigi mottled (fluorosis gigi)' },
+  { code: 'K00.4', desc: 'Gangguan pembentukan gigi' },
+  { code: 'K00.6', desc: 'Gangguan erupsi gigi' },
+  { code: 'K00.7', desc: 'Sindrom erupsi gigi' },
+
+  // ── Gigi Impaksi & Maloklusi ──
+  { code: 'K01.0', desc: 'Gigi terpendam (embedded)' },
+  { code: 'K01.1', desc: 'Gigi impaksi' },
+  { code: 'K07.0', desc: 'Anomali ukuran rahang' },
+  { code: 'K07.1', desc: 'Anomali hubungan rahang-tengkorak' },
+  { code: 'K07.2', desc: 'Anomali hubungan lengkung gigi (maloklusi)' },
+  { code: 'K07.3', desc: 'Anomali posisi gigi' },
+  { code: 'K07.4', desc: 'Maloklusi, tidak spesifik' },
+  { code: 'K07.5', desc: 'Kelainan dentofasial fungsional' },
+  { code: 'K07.6', desc: 'Gangguan sendi temporomandibular (TMJ)' },
+
+  // ── Penyakit Jaringan Keras Gigi ──
+  { code: 'K03.0', desc: 'Atrisi gigi berlebihan' },
+  { code: 'K03.1', desc: 'Abrasi gigi' },
+  { code: 'K03.2', desc: 'Erosi gigi' },
+  { code: 'K03.3', desc: 'Resorpsi patologis gigi' },
+  { code: 'K03.4', desc: 'Hipersementosis' },
+  { code: 'K03.5', desc: 'Ankylosis gigi' },
+  { code: 'K03.6', desc: 'Deposit pada gigi (kalkulus/karang gigi)' },
+  { code: 'K03.7', desc: 'Perubahan warna pasca erupsi gigi' },
+
+  // ── Penyakit Mukosa Mulut ──
+  { code: 'K12.0', desc: 'Stomatitis aftosa rekuren (sariawan)' },
+  { code: 'K12.1', desc: 'Stomatitis lainnya' },
+  { code: 'K12.2', desc: 'Selulitis dan abses rongga mulut' },
+  { code: 'K13.0', desc: 'Penyakit bibir' },
+  { code: 'K13.1', desc: 'Gigitan pipi dan bibir' },
+  { code: 'K13.2', desc: 'Leukoplakia dan lesi putih mukosa mulut' },
+  { code: 'K13.3', desc: 'Leukoplakia berbulu (hairy leukoplakia)' },
+  { code: 'K13.4', desc: 'Granuloma dan lesi mukosa mulut' },
+  { code: 'K13.5', desc: 'Fibrosis submukosa mulut' },
+  { code: 'K13.6', desc: 'Hiperplasia iritasi mukosa mulut' },
+
+  // ── Penyakit Kelenjar Ludah ──
+  { code: 'K11.0', desc: 'Atrofi kelenjar ludah' },
+  { code: 'K11.1', desc: 'Hipertrofi kelenjar ludah' },
+  { code: 'K11.2', desc: 'Sialoadenitis (radang kelenjar ludah)' },
+  { code: 'K11.3', desc: 'Abses kelenjar ludah' },
+  { code: 'K11.4', desc: 'Fistula kelenjar ludah' },
+  { code: 'K11.5', desc: 'Sialolithiasis (batu kelenjar ludah)' },
+  { code: 'K11.6', desc: 'Mukokel kelenjar ludah' },
+  { code: 'K11.7', desc: 'Gangguan sekresi kelenjar ludah (xerostomia)' },
+
+  // ── Prosedur / Tindakan Gigi ──
+  { code: 'Z01.2', desc: 'Pemeriksaan gigi rutin' },
+  { code: 'Z29.8', desc: 'Profilaksis gigi (scaling/pembersihan karang gigi)' },
+  { code: 'Z46.3', desc: 'Pemasangan/penyesuaian gigi tiruan (protesa gigi)' },
+  { code: 'Z96.5', desc: 'Implan gigi' },
 ];
 
 const TINDAKAN_OPTS = [

@@ -5,12 +5,24 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import '../admin/Dashboard.css';
 import './pasien-pages.css';
-import {
-  unwrapList,
-  normalizeProfile,
-  normalizeAppointmentRow,
-  parsePasienDashboardResponse,
-} from './pasien-helpers';
+import { normalizeProfile } from './pasien-helpers';
+
+// ✅ normalize langsung di sini, sesuai struktur API yang sudah diketahui
+const normalizeAppointment = (item) => ({
+  id: item.id,
+  date: item.tanggal_pendaftaran
+    ? new Date(item.tanggal_pendaftaran).toLocaleDateString('id-ID', {
+        day: '2-digit', month: 'long', year: 'numeric',
+      })
+    : '-',
+  time: item.jam_kunjungan
+    ? item.jam_kunjungan.substring(0, 5)
+    : '-',
+  doctorName: item.dokter?.nama ?? '-',
+  specialty:  item.dokter?.spesialisasi ?? '-',
+  status:     item.status ?? '-',
+  noAntrian:  item.no_antrian ?? '-',
+});
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -24,32 +36,27 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const dashRes = await axiosInstance.get('/pasien/dashboard');
-      const { pasienId: pid, profileRaw, appointmentsRaw } =
-        parsePasienDashboardResponse(dashRes.data);
+      // ✅ Fetch profile & appointments secara paralel
+      const [profileRes, apptRes] = await Promise.all([
+        axiosInstance.get('/pasien/profile'),
+        axiosInstance.get('/pasien/appointments'),
+      ]);
 
-      setPasienId(pid != null ? Number(pid) || pid : null);
-
-      let profileBody = profileRaw;
-      if (!profileBody || typeof profileBody !== 'object') {
-        const profileRes = await axiosInstance.get('/pasien/profile');
-        profileBody = profileRes.data?.data ?? profileRes.data;
-      }
+      // Profile
+      const profileBody = profileRes.data?.data ?? profileRes.data;
       setProfile(normalizeProfile(profileBody, user));
+      setPasienId(profileBody?.id ?? null);
 
-      let rawList = appointmentsRaw;
-      if (!rawList.length) {
-        const apptRes = await axiosInstance.get('/pasien/appointments?upcoming=true');
-        rawList = unwrapList(apptRes.data);
-      }
-      setAppointments(rawList.map(normalizeAppointmentRow));
+      // Appointments — data ada di .data (pagination Laravel)
+      const rawList = apptRes.data?.data ?? apptRes.data ?? [];
+      setAppointments(rawList.map(normalizeAppointment));
+
     } catch (err) {
       console.error('Error loading pasien dashboard data', err);
       setError(
         err.response?.data?.message ??
           'Gagal memuat data. Periksa koneksi atau coba lagi nanti.'
       );
-      setPasienId(null);
       setProfile(normalizeProfile(null, user));
       setAppointments([]);
     } finally {
@@ -62,10 +69,10 @@ export default function Dashboard() {
   }, [fetchData]);
 
   const quickLinks = [
-    { icon: '👤', label: 'Profil', to: '/pasien/profil' },
+    { icon: '👤', label: 'Profil',        to: '/pasien/profil' },
     { icon: '📝', label: 'Daftar Berobat', to: '/pasien/daftar-berobat' },
-    { icon: '📜', label: 'Riwayat', to: '/pasien/riwayat' },
-    { icon: '⏳', label: 'Antrian', to: '/pasien/antrian' },
+    { icon: '📜', label: 'Riwayat',        to: '/pasien/riwayat' },
+    { icon: '⏳', label: 'Antrian',        to: '/pasien/antrian' },
   ];
 
   return (
@@ -73,7 +80,7 @@ export default function Dashboard() {
       <Sidebar />
       <div className="admin-content">
         <header className="pasien-page-header">
-          <h1>Dashboard pasien</h1>
+          <h1>Dashboard Pasien</h1>
           <p>Ringkasan janji temu dan akses layanan</p>
         </header>
 
@@ -89,9 +96,7 @@ export default function Dashboard() {
           <>
             {profile && (
               <div className="info-box">
-                <p>
-                  Selamat datang, <strong>{profile.name}</strong>!
-                </p>
+                <p>Selamat datang, <strong>{profile.name}</strong>!</p>
                 {pasienId != null && <p>ID pasien: {pasienId}</p>}
                 <p>Email: {profile.email}</p>
                 <p>No. telepon: {profile.phone}</p>
@@ -109,6 +114,7 @@ export default function Dashboard() {
                         <th>Dokter</th>
                         <th>Spesialis</th>
                         <th>Jam</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -118,6 +124,7 @@ export default function Dashboard() {
                           <td>{a.doctorName}</td>
                           <td>{a.specialty}</td>
                           <td>{a.time}</td>
+                          <td>{a.status}</td>
                         </tr>
                       ))}
                     </tbody>

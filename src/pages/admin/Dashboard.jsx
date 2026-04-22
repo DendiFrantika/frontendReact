@@ -166,10 +166,10 @@ const AdminDashboard = () => {
   };
 
   const laporanCards = [
-    { icon: '👥', label: 'Laporan Pasien', link: '/admin/laporan/pasien', description: 'Lihat daftar pasien dan ringkasan laporan.' },
-    { icon: '🩺', label: 'Laporan Rekam Medis', link: '/admin/laporan/rekam-medis', description: 'Analisis rekam medis pasien.' },
-    { icon: '👨‍⚕️', label: 'Laporan Dokter', link: '/admin/laporan/dokter', description: 'Statistik pasien per dokter.' },
-    { icon: '🗓️', label: 'Laporan Pendaftaran', link: '/admin/laporan/pendaftaran', description: 'Laporan status pendaftaran.' },
+    { label: 'Laporan Pasien', link: '/admin/laporan/pasien', description: 'Lihat daftar pasien dan ringkasan laporan.' },
+    { label: 'Laporan Rekam Medis', link: '/admin/laporan/rekam-medis', description: 'Analisis rekam medis pasien.' },
+    { label: 'Laporan Dokter', link: '/admin/laporan/dokter', description: 'Statistik pasien per dokter.' },
+    { label: 'Laporan Pendaftaran', link: '/admin/laporan/pendaftaran', description: 'Laporan status pendaftaran.' },
   ];
 
   // Pie chart data handled via state
@@ -237,50 +237,47 @@ const AdminDashboard = () => {
         ) : (
           <>
             {/* Stats Cards */}
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon">👥</div>
-                <div className="stat-info">
-                  <h3>Total Pasien</h3>
-                  <p className="stat-value">{stats.totalPasien.toLocaleString()}</p>
-                  <small>{stats.pasienBaru > 0 ? `+${stats.pasienBaru} baru bulan ini` : 'Data terbaru'}</small>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '16px',
+                marginBottom: '24px',
+              }}>
+                <div className="stat-card">
+                  <div className="stat-info">
+                    <h3>Total Pasien</h3>
+                    <p className="stat-value">{stats.totalPasien.toLocaleString()}</p>
+                    <small>{stats.pasienBaru > 0 ? `+${stats.pasienBaru} baru bulan ini` : 'Data terbaru'}</small>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-info">
+                    <h3>Total Dokter</h3>
+                    <p className="stat-value">{stats.totalDokter}</p>
+                    <small>{stats.dokterAktif > 0 ? `${stats.dokterAktif} aktif` : 'Data terbaru'}</small>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-info">
+                    <h3>Pendaftaran</h3>
+                    <p className="stat-value">{stats.totalPendaftaran.toLocaleString()}</p>
+                    <small>{stats.pendaftaranHariIni > 0 ? `Hari ini: ${stats.pendaftaranHariIni}` : 'Data terbaru'}</small>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-info">
+                    <h3>Total Layanan</h3>
+                    <p className="stat-value">{stats.totalLayanan}</p>
+                    <small>{serviceData.length > 0 ? `${serviceData.length} kategori` : 'Data terbaru'}</small>
+                  </div>
                 </div>
               </div>
-
-              <div className="stat-card">
-                <div className="stat-icon">👨‍⚕️</div>
-                <div className="stat-info">
-                  <h3>Total Dokter</h3>
-                  <p className="stat-value">{stats.totalDokter}</p>
-                  <small>{stats.dokterAktif > 0 ? `${stats.dokterAktif} aktif` : 'Data terbaru'}</small>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon">📋</div>
-                <div className="stat-info">
-                  <h3>Pendaftaran</h3>
-                  <p className="stat-value">{stats.totalPendaftaran.toLocaleString()}</p>
-                  <small>{stats.pendaftaranHariIni > 0 ? `Hari ini: ${stats.pendaftaranHariIni}` : 'Data terbaru'}</small>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon">🏥</div>
-                <div className="stat-info">
-                  <h3>Total Layanan</h3>
-                  <p className="stat-value">{stats.totalLayanan}</p>
-                  <small>{serviceData.length > 0 ? `${serviceData.length} kategori` : 'Data terbaru'}</small>
-                </div>
-              </div>
-            </div>
 
             <div className="dashboard-section">
               <h2>Menu Laporan</h2>
               <div className="quick-actions">
                 {laporanCards.map((action) => (
                   <Link key={action.label} to={action.link} className="action-btn">
-                    <div className="action-icon">{action.icon}</div>
                     <strong>{action.label}</strong>
                     <span style={{ marginTop: '8px', display: 'block', color: '#7f8c8d', fontSize: '0.95rem' }}>
                       {action.description}
@@ -289,7 +286,6 @@ const AdminDashboard = () => {
                 ))}
               </div>
             </div>
-
             <div className="dashboard-sections">
               {/* Recent Activities */}
               <section className="dashboard-section">
