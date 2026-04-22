@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
-import './Pengaturan.css';
+// import './Pengaturan.css';
 
 export default function Pengaturan() {
   const { user, logout } = useAuth();
