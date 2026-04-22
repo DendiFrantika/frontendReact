@@ -1,0 +1,41 @@
+[33m4c9b6e4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge branch 'main' of https://github.com/DendiFrantika/frontendReact
+[33md03ede6[m Finish Dokter
+[33m1795551[m[33m ([m[1;32mdokter[m[33m)[m Merge branch 'main' into dokter
+[33m3495349[m fixing loop
+[33me5588b3[m Big loop Masi ada
+[33m673ae69[m Fitur dokter Add
+[33m0084ba8[m css bagian admin
+[33m0f91324[m Merge branch 'main' of https://github.com/DendiFrantika/frontendReact
+[33mfdd920b[m Tanggal Bagian Riwayat Pasien
+[33mf5ef9ac[m Finalisasi Fitur Admin
+[33mafac6f7[m Merge branch 'main' of https://github.com/DendiFrantika/frontendReact
+[33m19168ee[m bagian dokter
+[33m5875a9b[m update project
+[33me628cbe[m update clinic components and assets
+[33m8edb2a1[m Fixing UI
+[33m4636488[m Update all role admin
+[33m36e9425[m Add Laporan Admin
+[33m0cb7eb4[m Merge branch 'main' of https://github.com/DendiFrantika/frontendReact
+[33m3d13361[m Dashboard admin pasien update
+[33m7f44174[m feat: update halaman pengaturan, analytics, dan aktivitas admin
+[33m8b4c02a[m Fixing Dashboard Pasien daftar berobat
+[33mc6b43a0[m fix: update untuk production
+[33m6c3f66d[m Fixing error rekam Medis
+[33m32c1999[m api
+[33m12b6391[m perbaikan login
+[33mcffd88c[m fix: add dev script and update package.json
+[33m949a3bb[m[33m ([m[1;31morigin/v0/dendhi83-1081-200e4c2a[m[33m, [m[1;31morigin/feat/auth-user[m[33m)[m update auth user
+[33m6fef669[m fix(auth): fix auto login profile sync and array support for PrivateRoute middleware
+[33m25ab3a8[m feat(admin): link dashboard stats to backend API
+[33m00bca88[m feat(auth): add profile get+put, backend logout, and handle token expired
+[33m62cad2f[m Add Toogle Eye Password
+[33m17c6ab3[m update master data lia
+[33mfcb97d2[m RekamMedis Update
+[33m1cc3b3e[m Merge pull request #1 from DendiFrantika/feat/master-data
+[33m7cdc7d7[m[33m ([m[1;31morigin/feat/master-data[m[33m)[m update lia
+[33m86163d6[m Fix refresh loop dan perbaiki App.js routing
+[33m7f10aab[m update fitur / perbaikan
+[33m0f9153b[m update project
+[33m5cde0a8[m feat: Add admin dashboard, dokter pages, services, and API testing
+[33m687b8ac[m Initial commit: Frontend React aplikasi klinik dengan dashboard admin, dokter, dan pasien
+[33m077d3e5[m Initialize project using Create React App

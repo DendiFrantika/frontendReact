@@ -1,0 +1,90 @@
+[33m4c9b6e4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: pull: Fast-forward
+[33md03ede6[m HEAD@{1}: commit: Finish Dokter
+[33m1795551[m[33m ([m[1;32mdokter[m[33m)[m HEAD@{2}: merge dokter: Fast-forward
+[33m3495349[m HEAD@{3}: checkout: moving from dokter to main
+[33m1795551[m[33m ([m[1;32mdokter[m[33m)[m HEAD@{4}: checkout: moving from dokter to dokter
+[33m1795551[m[33m ([m[1;32mdokter[m[33m)[m HEAD@{5}: commit (merge): Merge branch 'main' into dokter
+[33me5588b3[m HEAD@{6}: checkout: moving from main to dokter
+[33m3495349[m HEAD@{7}: commit: fixing loop
+[33mfdd920b[m HEAD@{8}: checkout: moving from dokter to main
+[33me5588b3[m HEAD@{9}: commit: Big loop Masi ada
+[33m673ae69[m HEAD@{10}: checkout: moving from main to dokter
+[33mfdd920b[m HEAD@{11}: checkout: moving from dokter to main
+[33m673ae69[m HEAD@{12}: commit: Fitur dokter Add
+[33mfdd920b[m HEAD@{13}: checkout: moving from main to dokter
+[33mfdd920b[m HEAD@{14}: commit: Tanggal Bagian Riwayat Pasien
+[33mf5ef9ac[m HEAD@{15}: commit: Finalisasi Fitur Admin
+[33m5875a9b[m HEAD@{16}: pull: Fast-forward
+[33m8edb2a1[m HEAD@{17}: commit: Fixing UI
+[33m4636488[m HEAD@{18}: commit: Update all role admin
+[33m36e9425[m HEAD@{19}: commit: Add Laporan Admin
+[33m0cb7eb4[m HEAD@{20}: pull: Merge made by the 'ort' strategy.
+[33m3d13361[m HEAD@{21}: commit: Dashboard admin pasien update
+[33m8b4c02a[m HEAD@{22}: commit: Fixing Dashboard Pasien daftar berobat
+[33mc6b43a0[m HEAD@{23}: pull: Fast-forward
+[33m6c3f66d[m HEAD@{24}: commit: Fixing error rekam Medis
+[33m32c1999[m HEAD@{25}: commit: api
+[33m12b6391[m HEAD@{26}: checkout: moving from rekam-medis to main
+[33m46b7910[m[33m ([m[1;32mrekam-medis[m[33m)[m HEAD@{27}: checkout: moving from main to rekam-medis
+[33m12b6391[m HEAD@{28}: commit: perbaikan login
+[33mcffd88c[m HEAD@{29}: pull: Fast-forward
+[33m62cad2f[m HEAD@{30}: checkout: moving from rekam-medis to main
+[33m46b7910[m[33m ([m[1;32mrekam-medis[m[33m)[m HEAD@{31}: commit: profile1
+[33ma5b8945[m HEAD@{32}: checkout: moving from main to rekam-medis
+[33m62cad2f[m HEAD@{33}: checkout: moving from rekam-medis to main
+[33ma5b8945[m HEAD@{34}: commit: Ambil dari main
+[33m705b633[m HEAD@{35}: checkout: moving from main to rekam-medis
+[33m62cad2f[m HEAD@{36}: commit: Add Toogle Eye Password
+[33m17c6ab3[m HEAD@{37}: pull: Fast-forward
+[33mfcb97d2[m HEAD@{38}: commit: RekamMedis Update
+[33m1cc3b3e[m HEAD@{39}: checkout: moving from main to main
+[33m1cc3b3e[m HEAD@{40}: pull: Fast-forward
+[33m86163d6[m HEAD@{41}: checkout: moving from rekam-medis to main
+[33m705b633[m HEAD@{42}: commit: fix rekam medis
+[33m86163d6[m HEAD@{43}: checkout: moving from main to rekam-medis
+[33m86163d6[m HEAD@{44}: clone: from https://github.com/DendiFrantika/frontendReact
+[33m4c9b6e4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: pull: Fast-forward
+[33md03ede6[m HEAD@{1}: commit: Finish Dokter
+[33m1795551[m[33m ([m[1;32mdokter[m[33m)[m HEAD@{2}: merge dokter: Fast-forward
+[33m3495349[m HEAD@{3}: checkout: moving from dokter to main
+[33m1795551[m[33m ([m[1;32mdokter[m[33m)[m HEAD@{4}: checkout: moving from dokter to dokter
+[33m1795551[m[33m ([m[1;32mdokter[m[33m)[m HEAD@{5}: commit (merge): Merge branch 'main' into dokter
+[33me5588b3[m HEAD@{6}: checkout: moving from main to dokter
+[33m3495349[m HEAD@{7}: commit: fixing loop
+[33mfdd920b[m HEAD@{8}: checkout: moving from dokter to main
+[33me5588b3[m HEAD@{9}: commit: Big loop Masi ada
+[33m673ae69[m HEAD@{10}: checkout: moving from main to dokter
+[33mfdd920b[m HEAD@{11}: checkout: moving from dokter to main
+[33m673ae69[m HEAD@{12}: commit: Fitur dokter Add
+[33mfdd920b[m HEAD@{13}: checkout: moving from main to dokter
+[33mfdd920b[m HEAD@{14}: commit: Tanggal Bagian Riwayat Pasien
+[33mf5ef9ac[m HEAD@{15}: commit: Finalisasi Fitur Admin
+[33m5875a9b[m HEAD@{16}: pull: Fast-forward
+[33m8edb2a1[m HEAD@{17}: commit: Fixing UI
+[33m4636488[m HEAD@{18}: commit: Update all role admin
+[33m36e9425[m HEAD@{19}: commit: Add Laporan Admin
+[33m0cb7eb4[m HEAD@{20}: pull: Merge made by the 'ort' strategy.
+[33m3d13361[m HEAD@{21}: commit: Dashboard admin pasien update
+[33m8b4c02a[m HEAD@{22}: commit: Fixing Dashboard Pasien daftar berobat
+[33mc6b43a0[m HEAD@{23}: pull: Fast-forward
+[33m6c3f66d[m HEAD@{24}: commit: Fixing error rekam Medis
+[33m32c1999[m HEAD@{25}: commit: api
+[33m12b6391[m HEAD@{26}: checkout: moving from rekam-medis to main
+[33m46b7910[m[33m ([m[1;32mrekam-medis[m[33m)[m HEAD@{27}: checkout: moving from main to rekam-medis
+[33m12b6391[m HEAD@{28}: commit: perbaikan login
+[33mcffd88c[m HEAD@{29}: pull: Fast-forward
+[33m62cad2f[m HEAD@{30}: checkout: moving from rekam-medis to main
+[33m46b7910[m[33m ([m[1;32mrekam-medis[m[33m)[m HEAD@{31}: commit: profile1
+[33ma5b8945[m HEAD@{32}: checkout: moving from main to rekam-medis
+[33m62cad2f[m HEAD@{33}: checkout: moving from rekam-medis to main
+[33ma5b8945[m HEAD@{34}: commit: Ambil dari main
+[33m705b633[m HEAD@{35}: checkout: moving from main to rekam-medis
+[33m62cad2f[m HEAD@{36}: commit: Add Toogle Eye Password
+[33m17c6ab3[m HEAD@{37}: pull: Fast-forward
+[33mfcb97d2[m HEAD@{38}: commit: RekamMedis Update
+[33m1cc3b3e[m HEAD@{39}: checkout: moving from main to main
+[33m1cc3b3e[m HEAD@{40}: pull: Fast-forward
+[33m86163d6[m HEAD@{41}: checkout: moving from rekam-medis to main
+[33m705b633[m HEAD@{42}: commit: fix rekam medis
+[33m86163d6[m HEAD@{43}: checkout: moving from main to rekam-medis
+[33m86163d6[m HEAD@{44}: clone: from https://github.com/DendiFrantika/frontendReact
