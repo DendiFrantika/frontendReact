@@ -3,18 +3,64 @@ import Sidebar from './Sidebar';
 
 const AdminLayout = ({ title, children }) => {
   return (
-    <div className="admin-layout">
+    <div style={styles.layout}>
+
+      {/* SIDEBAR */}
       <Sidebar />
-      <main className="admin-content">
+
+      {/* MAIN CONTENT */}
+      <main style={styles.content}>
+
         {title && (
-          <div className="admin-page-header">
-            <h1>{title}</h1>
+          <div style={styles.header}>
+            <h1 style={styles.title}>{title}</h1>
           </div>
         )}
-        {children}
+
+        <div style={styles.body}>
+          {children}
+        </div>
+
       </main>
     </div>
   );
 };
 
 export default AdminLayout;
+
+/* ===========================
+   STYLES (INLINE)
+   =========================== */
+const styles = {
+  layout: {
+    display: 'flex',
+    height: '100vh', // 🔥 kunci biar tidak memanjang
+    background: '#f8fafc'
+  },
+
+  content: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden'
+  },
+
+  header: {
+    padding: '20px 24px',
+    borderBottom: '1px solid #e2e8f0',
+    background: '#ffffff'
+  },
+
+  title: {
+    margin: 0,
+    fontSize: '1.4rem',
+    fontWeight: 600,
+    color: '#1e293b'
+  },
+
+  body: {
+    flex: 1,
+    overflowY: 'auto', // 🔥 ini yang bikin scroll internal
+    padding: '24px'
+  }
+};

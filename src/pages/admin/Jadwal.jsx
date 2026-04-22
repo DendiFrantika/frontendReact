@@ -238,7 +238,7 @@ export default function Jadwal() {
                   <div>
                     <b>{sch.hari}</b>
                     <div>{sch.jam_mulai} - {sch.jam_selesai}</div>
-                    <small>Kapasitas: {sch.kapasitas}</small>
+                    {/* <small>Kapasitas: {sch.kapasitas}</small> */}
                   </div>
 
                   <div>

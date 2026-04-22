@@ -478,7 +478,7 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
               </div>
               <div className="form-group">
                 <label className="form-label">Spesialisasi</label>
-                <input type="text" name="spesialisasi" value={formData.spesialisasi} onChange={handleChange} required maxLength={100} placeholder="Umum / Gigi / Anak..." />
+                <input type="text" name="spesialisasi" value={formData.spesialisasi} onChange={handleChange} required maxLength={100} placeholder="Umum / Gigi..." />
                 {renderError('spesialisasi')}
               </div>
               <div className="form-group">

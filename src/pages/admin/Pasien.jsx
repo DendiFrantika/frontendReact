@@ -71,6 +71,10 @@ export default function Pasien() {
     return () => clearTimeout(t);
   }, [filterSearchInput]);
 
+useEffect(() => {
+  setCurrentPage(1);
+}, [filterSearch, filterJk, filterGoldar, itemsPerPage]);
+
   const fetchPatients = useCallback(async (page = 1) => {
     setLoading(true);
     const params = {
@@ -80,6 +84,8 @@ export default function Pasien() {
     if (filterSearch) params.search = filterSearch;
     if (filterJk) params.jenis_kelamin = filterJk;
     if (filterGoldar) params.golongan_darah = filterGoldar;
+    console.log('Fetch params:', params);
+    console.log('filterGoldar value:', filterGoldar);
     try {
       const res = await requestWithFallback([
         { method: 'get', url: '/admin/pasien', params },
@@ -370,43 +376,63 @@ export default function Pasien() {
         {loading ? (
           <p>Memuat data pasien...</p>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>Nama</th>
-                <th>Umur</th>
-                <th>JK</th>
-                <th>Telepon</th>
-                <th>Email</th>
-                <th>Gol Darah</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {patients.length === 0 ? (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: 'center' }}>Tidak ada data pasien</td>
-                </tr>
-              ) : (
-                patients.map((p, i) => (
-                  <tr key={p.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                    <td>{p.nama}</td>
-                    <td>{hitungUmur(p.tanggal_lahir)} thn</td>
-                    <td>{displayJenisKelamin(p.jenis_kelamin)}</td>
-                    <td>{p.no_telepon}</td>
-                    <td>{p.email}</td>
-                    <td>{p.golongan_darah}</td>
-                    <td>
-                      <button className="btn-edit" onClick={() => handleEdit(p)}>Edit</button>
-                      <button className="btn-delete" onClick={() => setDeleteTarget(p)}>Hapus</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="table-wrapper">
+  <table className="table">
+  <thead>
+  <tr>
+    <th>No</th>
+    <th>Nama</th>
+    <th>Umur</th>
+    <th>JK</th>
+    <th>Telepon</th>
+    <th>Email</th>
+    <th>GolDar</th>
+    <th>Aksi</th>
+  </tr>
+</thead>
+
+  <tbody>
+    {patients.length === 0 ? (
+      <tr>
+        <td colSpan="8" style={{ textAlign: 'center' }}>
+          Tidak ada data pasien
+        </td>
+      </tr>
+    ) : (
+      patients.map((p, i) => (
+        <tr key={p.id}>
+          <td>{(currentPage - 1) * itemsPerPage + i + 1}</td>
+
+          {/* NAMA + EMAIL MODEL DOKTER */}
+          <td>
+            <div className="nama-cell">
+              <div className="nama">{p.nama}</div>
+              <div className="email">{p.email}</div>
+            </div>
+          </td>
+
+          <td>{hitungUmur(p.tanggal_lahir)} thn</td>
+          <td>{displayJenisKelamin(p.jenis_kelamin)}</td>
+          <td>{p.no_telepon}</td>
+          <td>{p.email}</td>
+          <td>{p.golongan_darah}</td>
+
+          <td>
+            <div className="aksi-group">
+              <button className="btn-edit" onClick={() => handleEdit(p)}>
+                Edit
+              </button>
+              <button className="btn-delete" onClick={() => setDeleteTarget(p)}>
+                Hapus
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
+</div>
         )}
 
         {/* Pagination Controls */}
