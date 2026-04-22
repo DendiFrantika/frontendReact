@@ -23,15 +23,15 @@ const authService = {
     }
   },
 
-  logout: async () => {
+    logout: async () => {
     try {
       await apiService.post('/auth/logout');
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      // ✅ hapus removeItem di sini, biar AuthContext yang handle
     } catch (error) {
-      console.error('Logout error:', error);
+      console.warn('Logout error (ignored):', error);
+      // tidak perlu throw, logout tetap lanjut
     }
-  },
+},
 
   /**
    * @param {{ bootstrap?: boolean }} [options] — bootstrap=true: 401 tidak full page redirect (untuk init AuthContext)

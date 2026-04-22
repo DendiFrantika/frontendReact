@@ -10,11 +10,9 @@ const extractUserPayload = (body) => {
 
 const normalizeUserRole = (user, fallbackRole) => {
   const normalized = { ...(user || {}) };
-
   if (typeof normalized.role === 'string') {
     normalized.role = normalized.role.trim().toLowerCase();
   }
-
   if (!normalized.role) {
     if (normalized.isAdmin || normalized.is_admin || fallbackRole === 'admin') {
       normalized.role = 'admin';
@@ -30,80 +28,56 @@ const normalizeUserRole = (user, fallbackRole) => {
       normalized.role = 'pasien';
     }
   }
-
   return normalized;
 };
 
 export const AuthProvider = ({ children }) => {
-
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // ⭐ penting
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const initAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-
-      // 🔥 STOP TOTAL kalau tidak ada token
-      if (!token) {
+    const initAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setUser(null);
+          return;
+        }
+        const res = await authService.getCurrentUser({ bootstrap: true });
+        const userData = extractUserPayload(res);
+        const normalized = normalizeUserRole(userData);
+        setUser(normalized);
+        localStorage.setItem('user', JSON.stringify(normalized));
+      } catch (e) {
+        console.warn('Token invalid:', e);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setUser(null);
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      // ✅ validasi ke backend
-      const res = await authService.getCurrentUser({ bootstrap: true });
-
-      const userData = extractUserPayload(res);
-      const normalized = normalizeUserRole(userData);
-
-      setUser(normalized);
-      localStorage.setItem('user', JSON.stringify(normalized));
-
-    } catch (e) {
-      console.warn('Token invalid:', e);
-
-      // 🔥 WAJIB CLEAR kalau gagal
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  initAuth();
-}, []);
+    };
+    initAuth();
+  }, []);
 
   const login = useCallback((userData, fallbackRole) => {
-
     const normalizedUser = normalizeUserRole(userData, fallbackRole);
-
     setUser(normalizedUser);
-
     try {
       localStorage.setItem('user', JSON.stringify(normalizedUser));
     } catch (err) {
       console.warn('Failed to save user to localStorage', err);
     }
-
   }, []);
 
   const logout = useCallback(async () => {
-  try {
-    await authService.logout();
-  } catch (err) {
-    console.warn('Backend logout failed', err);
-  }
-
-  // 🔥 CLEAR TOTAL
-  localStorage.clear();
-
-  // 🔥 RESET STATE
-  setUser(null);
-
-  // 🔥 HARD RELOAD (WAJIB)
-  window.location.href = '/login';
-}, []);
+    setUser(null);
+    localStorage.clear();
+    authService.logout().catch(err => {
+      console.warn('Backend logout failed (ignored):', err);
+    });
+    window.location.href = '/login';
+  }, []);
 
   const isAuthenticated = !!user;
 
@@ -112,22 +86,21 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated,
-    loading // ⭐ tambahkan ini
+    loading,
   }), [user, login, logout, isAuthenticated, loading]);
 
-  return (
+  return ( // ✅ return yang hilang
     <AuthContext.Provider value={authValue}>
       {children}
     </AuthContext.Provider>
   );
-};
+}; // ✅ penutup AuthProvider
 
+// ✅ useAuth di LUAR AuthProvider
 export const useAuth = () => {
   const context = useContext(AuthContext);
-
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-
   return context;
 };
