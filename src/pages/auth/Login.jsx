@@ -8,7 +8,7 @@ import { getRoleFromResponse, normalizeUserPayload } from './authRoles';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
+  // const { login, isAuthenticated, user } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',

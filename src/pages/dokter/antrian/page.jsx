@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // ✅ tambah useCallback
+import { useNavigate } from 'react-router-dom'; // ✅ tambah useNavigate
 import DokterLayout from '../DokterLayout';
 import axiosInstance from '../../../api/axios';
+import { useAuth } from '../../../context/AuthContext'; // ✅ sesuaikan path auth context kamu
 
 export default function Antrian() {
+  const { user } = useAuth(); // ✅ ambil user dari context
+  const navigate = useNavigate(); // ✅ sekarang bisa dipakai
+
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchQueue();
-  }, []);
+  const [error, setError] = useState('');       // ✅ tambah state error
+  const [updating, setUpdating] = useState(null); // ✅ tambah state updating
 
   const dokterId = user?.id;
-  const navigate = useNavigate();
 
-  // ── Fetch: GET /dokter/pendaftaran/dokter/{dokter_id} ────────────────────
-  // Memanggil PendaftaranController@getByDokter
-  const fetchQueue = useCallback(async (pageNum = 1) => {
+  const fetchQueue = useCallback(async () => {
     if (!dokterId) {
       setError('Informasi dokter tidak tersedia. Silakan login ulang.');
       setLoading(false);
@@ -28,15 +28,14 @@ export default function Antrian() {
       setQueue(res.data);
     } catch (err) {
       console.error('Error fetching queue:', err);
+      setError('Gagal memuat antrian.');
     } finally {
       setLoading(false);
     }
   }, [dokterId]);
 
-  useEffect(() => { fetchQueue(1); }, [fetchQueue]);
+  useEffect(() => { fetchQueue(); }, [fetchQueue]);
 
-  // ── Update status: PUT /dokter/pendaftaran/{id}/status ───────────────────
-  // Memanggil PendaftaranController@updateStatusDokter
   const updateStatus = async (id, status) => {
     setUpdating(id);
     try {
@@ -48,11 +47,14 @@ export default function Antrian() {
       );
     } catch (err) {
       console.error('Error updating status:', err);
+    } finally {
+      setUpdating(null); // ✅ reset setelah selesai
     }
   };
 
   return (
     <DokterLayout title="Antrian Pasien">
+      {error && <p className="error-text">{error}</p>} {/* ✅ tampilkan error */}
       {loading ? (
         <p>Memuat antrian...</p>
       ) : (
@@ -71,12 +73,14 @@ export default function Antrian() {
                       <button
                         className="btn primary"
                         onClick={() => updateStatus(item.id, 'in_progress')}
+                        disabled={updating === item.id} // ✅ disable saat loading
                       >
                         Mulai Pemeriksaan
                       </button>
                       <button
                         className="btn danger"
                         onClick={() => updateStatus(item.id, 'cancelled')}
+                        disabled={updating === item.id}
                       >
                         Batal
                       </button>
@@ -86,6 +90,7 @@ export default function Antrian() {
                     <button
                       className="btn success"
                       onClick={() => updateStatus(item.id, 'completed')}
+                      disabled={updating === item.id}
                     >
                       Selesai
                     </button>

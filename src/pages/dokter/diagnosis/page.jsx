@@ -14,10 +14,10 @@ export default function Diagnosis() {
   });
 
   useEffect(() => {
-    fetchDiagnoses();
+    fetchDiagnoses(); // ✅ Bug 2 fix: nama fungsi diseragamkan
   }, []);
 
-  const fetchRecords = async (p = 1) => {
+  const fetchDiagnoses = async () => { // ✅ Bug 2 fix: diganti dari fetchRecords
     setLoading(true);
     try {
       const res = await axiosInstance.get('/dokter/diagnosis');
@@ -93,7 +93,8 @@ export default function Diagnosis() {
             <button type="submit" className="btn primary">Simpan</button>
             <button type="button" className="btn" onClick={() => setShowForm(false)}>Batal</button>
           </div>
-        )}
+        </form>
+      )}
 
       {loading ? (
         <p>Memuat diagnosis...</p>
