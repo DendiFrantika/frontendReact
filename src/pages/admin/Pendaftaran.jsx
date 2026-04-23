@@ -2,27 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import AdminCrudModal from '../../components/AdminCrudModal';
 import axiosInstance from '../../api/axios';
+import './Pendaftaran.css';
 
 const STATUS_LABELS = {
-  pending:    { label: 'Pending',     color: '#b45309', bg: '#fef3c7' },
+  pending:    { label: 'Pending',      color: '#b45309', bg: '#fef3c7' },
   confirmed:  { label: 'Dikonfirmasi', color: '#1d4ed8', bg: '#dbeafe' },
-  checked_in: { label: 'Check-in',    color: '#6d28d9', bg: '#ede9fe' },
-  completed:  { label: 'Selesai',     color: '#065f46', bg: '#d1fae5' },
-  cancelled:  { label: 'Dibatalkan',  color: '#991b1b', bg: '#fee2e2' },
+  checked_in: { label: 'Check-in',     color: '#6d28d9', bg: '#ede9fe' },
+  completed:  { label: 'Selesai',      color: '#065f46', bg: '#d1fae5' },
+  cancelled:  { label: 'Dibatalkan',   color: '#991b1b', bg: '#fee2e2' },
 };
 
 function StatusBadge({ status }) {
   const s = STATUS_LABELS[status] ?? { label: status, color: '#374151', bg: '#f3f4f6' };
   return (
-    <span style={{
-      padding: '2px 10px',
-      borderRadius: 999,
-      fontSize: 12,
-      fontWeight: 600,
-      color: s.color,
-      background: s.bg,
-      whiteSpace: 'nowrap',
-    }}>
+    <span className="pnd-badge" style={{ color: s.color, background: s.bg }}>
       {s.label}
     </span>
   );
@@ -36,29 +29,28 @@ function unwrap(data) {
 }
 
 export default function Pendaftaran() {
-  const [list, setList]             = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [list, setList]               = useState([]);
+  const [loading, setLoading]         = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
-  const [filterDate, setFilterDate] = useState('');
-  const [notice, setNotice]         = useState('');
-  const [error, setError]           = useState('');
+  const [filterDate, setFilterDate]   = useState('');
+  const [notice, setNotice]           = useState('');
+  const [error, setError]             = useState('');
 
-  // Detail modal
-  const [detail, setDetail]         = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [detail, setDetail]                   = useState(null);
+  const [detailLoading, setDetailLoading]     = useState(false);
+  const [verifyTarget, setVerifyTarget]       = useState(null);
+  const [verifyStatus, setVerifyStatus]       = useState('confirmed');
+  const [verifyLoading, setVerifyLoading]     = useState(false);
 
-  // Verifikasi modal
-  const [verifyTarget, setVerifyTarget] = useState(null);
-  const [verifyStatus, setVerifyStatus] = useState('confirmed');
-  const [verifyLoading, setVerifyLoading] = useState(false);
-
-  const fetchList = useCallback(async () => {
+  /* ── fetch utama — params langsung dari state, bukan dari deps memoized ── */
+  const fetchList = useCallback(async (status = '', date = '') => {
     setLoading(true);
     setError('');
     try {
       const params = {};
-      if (filterStatus) params.status = filterStatus;
-      if (filterDate)   params.tanggal = filterDate;
+      if (status) params.status            = status;
+      if (date)   params.tanggal_pendaftaran = date;   // sesuai kolom di Laravel
+
       const res = await axiosInstance.get('/admin/pendaftaran', { params });
       setList(unwrap(res.data));
     } catch (err) {
@@ -66,10 +58,28 @@ export default function Pendaftaran() {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, filterDate]);
+  }, []);
 
-  useEffect(() => { fetchList(); }, [fetchList]);
+  /* ── jalankan fetch setiap kali filter berubah ── */
+  useEffect(() => {
+    fetchList(filterStatus, filterDate);
+  }, [fetchList, filterStatus, filterDate]);
 
+  /* ── handler filter ── */
+  const handleFilterStatus = (e) => {
+    setFilterStatus(e.target.value);
+  };
+
+  const handleFilterDate = (e) => {
+    setFilterDate(e.target.value);
+  };
+
+  const handleReset = () => {
+    setFilterStatus('');
+    setFilterDate('');
+  };
+
+  /* ── detail ── */
   const handleDetail = async (id) => {
     setDetailLoading(true);
     setDetail(null);
@@ -83,6 +93,7 @@ export default function Pendaftaran() {
     }
   };
 
+  /* ── verifikasi ── */
   const handleVerify = async () => {
     if (!verifyTarget) return;
     setVerifyLoading(true);
@@ -92,7 +103,7 @@ export default function Pendaftaran() {
       });
       setVerifyTarget(null);
       setNotice(`Pendaftaran berhasil di-${verifyStatus === 'confirmed' ? 'konfirmasi' : 'tolak'}.`);
-      fetchList();
+      fetchList(filterStatus, filterDate);
     } catch (err) {
       setError(err.response?.data?.message ?? 'Gagal memverifikasi pendaftaran.');
     } finally {
@@ -100,40 +111,60 @@ export default function Pendaftaran() {
     }
   };
 
+  /* ── update status ── */
   const handleUpdateStatus = async (id, status) => {
     try {
       await axiosInstance.put(`/admin/pendaftaran/${id}`, { status });
       setNotice('Status berhasil diperbarui.');
-      fetchList();
+      fetchList(filterStatus, filterDate);
       if (detail?.id === id) handleDetail(id);
     } catch (err) {
       setError(err.response?.data?.message ?? 'Gagal memperbarui status.');
     }
   };
 
+  /* ── batalkan ── */
   const handleCancel = async (id) => {
     if (!window.confirm('Batalkan pendaftaran ini?')) return;
     try {
       await axiosInstance.delete(`/admin/pendaftaran/${id}`);
       setNotice('Pendaftaran dibatalkan.');
-      fetchList();
+      fetchList(filterStatus, filterDate);
     } catch (err) {
       setError(err.response?.data?.message ?? 'Gagal membatalkan pendaftaran.');
     }
   };
 
+  const hasActiveFilter = filterStatus || filterDate;
+
   return (
     <AdminLayout title="Pendaftaran">
-      <div style={{ padding: '0 0 32px' }}>
 
-        {/* Toolbar */}
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20, alignItems: 'flex-end' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>Filter Status</label>
+      {/* ── PAGE HEADER ── */}
+      <div className="pnd-page-header">
+        <div>
+          <h1 className="pnd-page-title">Pendaftaran</h1>
+          <p className="pnd-page-sub">Kelola dan verifikasi data pendaftaran pasien</p>
+        </div>
+      </div>
+
+      {/* ── NOTICE / ERROR ── */}
+      {notice && (
+        <div className="pnd-notice">{notice}</div>
+      )}
+      {error && (
+        <div className="pnd-error">{error}</div>
+      )}
+
+      {/* ── TOOLBAR ── */}
+      <div className="pnd-toolbar">
+        <div className="pnd-toolbar-left">
+          <div className="pnd-filter-group">
+            <label className="pnd-filter-label">Status</label>
             <select
+              className="pnd-select"
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
+              onChange={handleFilterStatus}
             >
               <option value="">Semua Status</option>
               {Object.entries(STATUS_LABELS).map(([val, { label }]) => (
@@ -141,104 +172,109 @@ export default function Pendaftaran() {
               ))}
             </select>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>Filter Tanggal</label>
+
+          <div className="pnd-filter-group">
+            <label className="pnd-filter-label">Tanggal</label>
             <input
               type="date"
+              className="pnd-input-date"
               value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
+              onChange={handleFilterDate}
             />
           </div>
-          <button
-            onClick={() => { setFilterStatus(''); setFilterDate(''); }}
-            style={{ padding: '7px 16px', borderRadius: 6, border: '1px solid #d1d5db', background: '#f9fafb', fontSize: 14, cursor: 'pointer' }}
-          >
-            Reset
-          </button>
+
+          {hasActiveFilter && (
+            <button className="pnd-btn-reset" onClick={handleReset}>
+              Reset filter
+            </button>
+          )}
         </div>
 
-        {notice && (
-          <div style={{ padding: '10px 16px', background: '#d1fae5', color: '#065f46', borderRadius: 8, marginBottom: 16, fontSize: 14 }}>
-            {notice}
-          </div>
-        )}
-        {error && (
-          <div style={{ padding: '10px 16px', background: '#fee2e2', color: '#991b1b', borderRadius: 8, marginBottom: 16, fontSize: 14 }}>
-            {error}
-          </div>
-        )}
+        <div className="pnd-toolbar-right">
+          <span className="pnd-count">
+            {loading ? '...' : `${list.length} pendaftaran`}
+          </span>
+        </div>
+      </div>
 
-        {/* Tabel */}
-        {loading ? (
-          <p style={{ color: '#6b7280' }}>Memuat data pendaftaran…</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-              <thead>
-                <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                  {['No', 'No. Antrian', 'Pasien', 'Dokter', 'Tanggal', 'Jam', 'Keluhan', 'Status', 'Aksi'].map(h => (
-                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
+      {/* ── TABEL ── */}
+      {loading ? (
+        <div className="pnd-loading">Memuat data pendaftaran...</div>
+      ) : (
+        <div className="pnd-table-wrap">
+          <table className="pnd-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>No. Antrian</th>
+                <th>Pasien</th>
+                <th>Dokter</th>
+                <th>Tanggal</th>
+                <th>Jam</th>
+                <th>Keluhan</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <div className="pnd-empty">
+                      {hasActiveFilter
+                        ? 'Tidak ada data untuk filter yang dipilih'
+                        : 'Belum ada data pendaftaran'}
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {list.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: 32, color: '#9ca3af' }}>
-                      Tidak ada data pendaftaran
-                    </td>
-                  </tr>
-                ) : list.map((item, i) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '10px 12px', color: '#6b7280' }}>{i + 1}</td>
-                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>{item.no_antrian ?? '-'}</td>
-                    <td style={{ padding: '10px 12px' }}>{item.pasien?.nama ?? item.pasien_id}</td>
-                    <td style={{ padding: '10px 12px' }}>{item.dokter?.nama ?? item.dokter_id}</td>
-                    <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{item.tanggal_pendaftaran}</td>
-                    <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{item.jam_kunjungan}</td>
-                    <td style={{ padding: '10px 12px', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.keluhan}
-                    </td>
-                    <td style={{ padding: '10px 12px' }}>
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td style={{ padding: '10px 12px' }}>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              ) : (
+                list.map((item, i) => (
+                  <tr key={item.id}>
+                    <td className="pnd-td-num">{i + 1}</td>
+                    <td className="pnd-td-antrian">{item.no_antrian ?? '-'}</td>
+                    <td>{item.pasien?.nama ?? item.pasien_id}</td>
+                    <td>{item.dokter?.nama ?? item.dokter_id}</td>
+                    <td className="pnd-td-nowrap">{item.tanggal_pendaftaran}</td>
+                    <td className="pnd-td-nowrap">{item.jam_kunjungan}</td>
+                    <td className="pnd-td-keluhan">{item.keluhan ?? '-'}</td>
+                    <td><StatusBadge status={item.status} /></td>
+                    <td>
+                      <div className="pnd-aksi">
                         <button
+                          className="pnd-btn-detail"
                           onClick={() => handleDetail(item.id)}
-                          style={{ padding: '4px 10px', borderRadius: 5, border: '1px solid #d1d5db', background: '#f9fafb', fontSize: 12, cursor: 'pointer' }}
                         >
                           Detail
                         </button>
+
                         {item.status === 'pending' && (
                           <button
+                            className="pnd-btn-action pnd-action-blue"
                             onClick={() => { setVerifyTarget(item); setVerifyStatus('confirmed'); }}
-                            style={{ padding: '4px 10px', borderRadius: 5, border: 'none', background: '#dbeafe', color: '#1d4ed8', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                           >
                             Verifikasi
                           </button>
                         )}
                         {item.status === 'confirmed' && (
                           <button
+                            className="pnd-btn-action pnd-action-purple"
                             onClick={() => handleUpdateStatus(item.id, 'checked_in')}
-                            style={{ padding: '4px 10px', borderRadius: 5, border: 'none', background: '#ede9fe', color: '#6d28d9', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                           >
                             Check-in
                           </button>
                         )}
                         {item.status === 'checked_in' && (
                           <button
+                            className="pnd-btn-action pnd-action-green"
                             onClick={() => handleUpdateStatus(item.id, 'completed')}
-                            style={{ padding: '4px 10px', borderRadius: 5, border: 'none', background: '#d1fae5', color: '#065f46', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                           >
                             Selesai
                           </button>
                         )}
                         {!['completed', 'cancelled'].includes(item.status) && (
                           <button
+                            className="pnd-btn-action pnd-action-red"
                             onClick={() => handleCancel(item.id)}
-                            style={{ padding: '4px 10px', borderRadius: 5, border: 'none', background: '#fee2e2', color: '#991b1b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                           >
                             Batal
                           </button>
@@ -246,58 +282,68 @@ export default function Pendaftaran() {
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Modal Detail */}
+      {/* ── MODAL DETAIL ── */}
       <AdminCrudModal
         open={detailLoading || Boolean(detail)}
         title="Detail Pendaftaran"
         onClose={() => setDetail(null)}
       >
         {detailLoading ? (
-          <p style={{ color: '#6b7280' }}>Memuat detail…</p>
+          <div className="pnd-loading">Memuat detail...</div>
         ) : detail ? (
-          <div style={{ fontSize: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[
-              ['No. Antrian',   detail.no_antrian],
-              ['Status',        <StatusBadge status={detail.status} />],
-              ['Pasien',        detail.pasien?.nama ?? detail.pasien_id],
-              ['Dokter',        detail.dokter?.nama ?? detail.dokter_id],
-              ['Tanggal',       detail.tanggal_pendaftaran],
-              ['Jam',           detail.jam_kunjungan],
-              ['Keluhan',       detail.keluhan],
-              ['Jadwal Dokter', detail.jadwal_dokter?.hari ?? detail.jadwal_dokter_id],
-            ].map(([label, val]) => (
-              <div key={label} style={{ display: 'flex', gap: 8 }}>
-                <span style={{ minWidth: 130, color: '#6b7280', fontWeight: 600 }}>{label}</span>
-                <span>{val ?? '-'}</span>
-              </div>
-            ))}
+          <div className="pnd-modal-body">
+            <div className="pnd-modal-heading">
+              <p className="pnd-modal-kategori">Pendaftaran</p>
+              <h2 className="pnd-modal-title">Detail Pendaftaran</h2>
+            </div>
+
+            <div className="pnd-detail-grid">
+              {[
+                ['No. Antrian',   detail.no_antrian],
+                ['Status',        <StatusBadge status={detail.status} />],
+                ['Pasien',        detail.pasien?.nama ?? detail.pasien_id],
+                ['Dokter',        detail.dokter?.nama ?? detail.dokter_id],
+                ['Tanggal',       detail.tanggal_pendaftaran],
+                ['Jam',           detail.jam_kunjungan],
+                ['Keluhan',       detail.keluhan],
+                ['Jadwal Dokter', detail.jadwal_dokter?.hari ?? detail.jadwal_dokter_id],
+              ].map(([label, val]) => (
+                <div key={label} className="pnd-detail-row">
+                  <span className="pnd-detail-label">{label}</span>
+                  <span className="pnd-detail-val">{val ?? '-'}</span>
+                </div>
+              ))}
+            </div>
+
             {detail.rekam_medis && (
-              <div style={{ marginTop: 8, padding: 12, background: '#f9fafb', borderRadius: 8 }}>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Rekam Medis</div>
-                <div><span style={{ color: '#6b7280' }}>Diagnosis: </span>{detail.rekam_medis.diagnosis ?? '-'}</div>
-                <div><span style={{ color: '#6b7280' }}>Catatan: </span>{detail.rekam_medis.catatan ?? '-'}</div>
+              <div className="pnd-rekam-medis">
+                <p className="pnd-rekam-title">Rekam Medis</p>
+                <div className="pnd-detail-row">
+                  <span className="pnd-detail-label">Diagnosis</span>
+                  <span className="pnd-detail-val">{detail.rekam_medis.diagnosis ?? '-'}</span>
+                </div>
+                <div className="pnd-detail-row">
+                  <span className="pnd-detail-label">Catatan</span>
+                  <span className="pnd-detail-val">{detail.rekam_medis.catatan ?? '-'}</span>
+                </div>
               </div>
             )}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button
-                onClick={() => setDetail(null)}
-                style={{ padding: '7px 18px', borderRadius: 6, border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}
-              >
-                Tutup
-              </button>
+
+            <div className="pnd-modal-actions">
+              <button className="pnd-btn-secondary" onClick={() => setDetail(null)}>Tutup</button>
             </div>
           </div>
         ) : null}
       </AdminCrudModal>
 
-      {/* Modal Verifikasi */}
+      {/* ── MODAL VERIFIKASI ── */}
       <AdminCrudModal
         open={Boolean(verifyTarget)}
         title="Verifikasi Pendaftaran"
@@ -305,34 +351,47 @@ export default function Pendaftaran() {
         size="sm"
       >
         {verifyTarget && (
-          <div style={{ fontSize: 14 }}>
-            <p>
-              Pasien: <strong>{verifyTarget.pasien?.nama ?? verifyTarget.pasien_id}</strong><br />
-              No. Antrian: <strong>{verifyTarget.no_antrian}</strong>
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
-              <label style={{ fontWeight: 600, color: '#374151' }}>Keputusan</label>
+          <div className="pnd-modal-body">
+            <div className="pnd-modal-heading">
+              <p className="pnd-modal-kategori">Tindakan</p>
+              <h2 className="pnd-modal-title">Verifikasi Pendaftaran</h2>
+            </div>
+
+            <div className="pnd-detail-grid" style={{ marginBottom: 16 }}>
+              <div className="pnd-detail-row">
+                <span className="pnd-detail-label">Pasien</span>
+                <span className="pnd-detail-val">{verifyTarget.pasien?.nama ?? verifyTarget.pasien_id}</span>
+              </div>
+              <div className="pnd-detail-row">
+                <span className="pnd-detail-label">No. Antrian</span>
+                <span className="pnd-detail-val">{verifyTarget.no_antrian}</span>
+              </div>
+            </div>
+
+            <div className="pnd-form-group">
+              <label className="pnd-form-label">Keputusan <span>*</span></label>
               <select
+                className="pnd-select"
                 value={verifyStatus}
                 onChange={(e) => setVerifyStatus(e.target.value)}
-                style={{ padding: '7px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
               >
                 <option value="confirmed">Konfirmasi</option>
                 <option value="rejected">Tolak</option>
               </select>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+
+            <div className="pnd-modal-actions">
               <button
+                className="pnd-btn-primary"
                 onClick={handleVerify}
                 disabled={verifyLoading}
-                style={{ padding: '7px 18px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
               >
-                {verifyLoading ? 'Memproses…' : 'Simpan'}
+                {verifyLoading ? 'Memproses...' : 'Simpan'}
               </button>
               <button
+                className="pnd-btn-secondary"
                 onClick={() => setVerifyTarget(null)}
                 disabled={verifyLoading}
-                style={{ padding: '7px 18px', borderRadius: 6, border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}
               >
                 Batal
               </button>
@@ -340,6 +399,7 @@ export default function Pendaftaran() {
           </div>
         )}
       </AdminCrudModal>
+
     </AdminLayout>
   );
 }
