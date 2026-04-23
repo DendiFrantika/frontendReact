@@ -6,6 +6,7 @@
   height: 100vh; /* Kunci tinggi ke 100% layar agar tidak melar */
   overflow: hidden; /* Sembunyikan scrollbar utama body */
   background-color: #f8fafc;
+  overflow: hidden; /* Sidebar tetap diam, hanya konten yang scroll */
 }
 
 /* =========================
