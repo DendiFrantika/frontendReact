@@ -81,7 +81,11 @@ export default function Dashboard() {
       <div className="admin-content">
         <header className="pasien-page-header">
           <h1>Dashboard Pasien</h1>
-          <p>Ringkasan janji temu dan akses layanan</p>
+          {profile && (
+              <div className="info-box">
+                <p>Selamat datang, <strong>{profile.name}</strong>!</p>
+              </div>
+            )}
         </header>
 
         {error && (
@@ -94,14 +98,7 @@ export default function Dashboard() {
           <div className="loading">Memuat data…</div>
         ) : (
           <>
-            {profile && (
-              <div className="info-box">
-                <p>Selamat datang, <strong>{profile.name}</strong>!</p>
-                {pasienId != null && <p>ID pasien: {pasienId}</p>}
-                <p>Email: {profile.email}</p>
-                <p>No. telepon: {profile.phone}</p>
-              </div>
-            )}
+            
 
             <div className="dashboard-section" style={{ marginTop: 24 }}>
               <h2>Janji temu mendatang</h2>
@@ -136,18 +133,6 @@ export default function Dashboard() {
                   <Link to="/pasien/daftar-berobat">Daftar berobat</Link>
                 </div>
               )}
-            </div>
-
-            <div className="dashboard-section" style={{ marginTop: 24 }}>
-              <h2>Akses cepat</h2>
-              <div className="quick-actions">
-                {quickLinks.map((link) => (
-                  <Link key={link.to} to={link.to} className="action-btn">
-                    <div className="action-icon">{link.icon}</div>
-                    <span>{link.label}</span>
-                  </Link>
-                ))}
-              </div>
             </div>
           </>
         )}

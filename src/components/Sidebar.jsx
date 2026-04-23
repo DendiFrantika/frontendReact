@@ -28,13 +28,13 @@ const Sidebar = () => {
       { path: '/admin/alur-kerja',  label: 'Alur Kerja'  },
       { path: '/admin/pasien',      label: 'Pasien'      },
       { path: '/admin/dokter',      label: 'Dokter'      },
-      { path: '/admin/pendaftaran', label: 'Pendaftaran' },
+      { path: '/admin/pendaftaran', label: 'Pendaftaran' }, 
       { path: '/admin/rekam-medis', label: 'Rekam Medis' },
-      { path: '/admin/pengaturan',  label: 'Pengaturan'  },
+      // { path: '/admin/pengaturan',  label: 'Pengaturan'  },
     ];
     if (user?.role === 'pasien') return [
       { path: '/pasien',                label: 'Dashboard'      },
-      { path: '/pasien/profil',         label: 'Profil'         },
+      // { path: '/pasien/profil',         label: 'Profil'         },
       { path: '/pasien/daftar-berobat', label: 'Daftar Berobat' },
       { path: '/pasien/riwayat',        label: 'Riwayat'        },
       { path: '/pasien/antrian',        label: 'Antrian'        },
@@ -84,23 +84,33 @@ const Sidebar = () => {
         </nav>
 
         <div className="sidebar-footer">
-          <button
-            className="user-info user-profile-btn"
-            onClick={() => navigate(`/${user?.role}/profile`)}
-          >
-            <div className="user-avatar">{userInitial}</div>
-            <div className="user-details">
-              <p className="user-name">{userName}</p>
-              <p className="user-role">{roleLabel}</p>
-            </div>
-          </button>
-          <button
-            className="logout-btn"
-            onClick={async () => { await logout(); navigate('/login'); }}
-          >
-            Logout
-          </button>
-        </div>
+        <button
+          className="user-info user-profile-btn"
+          onClick={() => navigate(
+            user?.role === 'pasien'
+              ? '/pasien/profil'
+              : `/${user?.role}/pengaturan`
+          )}
+          title={user?.role === 'pasien' ? 'Profil' : 'Pengaturan'}
+          style={{ display: 'flex', alignItems: 'center', width: '100%' }}
+        >
+          <p style={{ margin: 0, fontSize: '13px', color: '#000000' }}>{roleLabel}</p>
+          <span style={{
+            fontSize: '11px',
+            color: '#000000',
+            marginLeft: 'auto',
+            whiteSpace: 'nowrap',
+          }}>
+            {user?.role === 'pasien' ? 'Profil' : 'Pengaturan'}
+          </span>
+        </button>
+        <button
+          className="logout-btn"
+          onClick={async () => { await logout(); navigate('/login'); }}
+        >
+          Logout
+        </button>
+      </div>
 
       </aside>
     </>
