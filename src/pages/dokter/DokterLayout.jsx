@@ -76,20 +76,21 @@ const DokterLayout = ({ title, children }) => {
 
         <div className="sidebar-footer">
           <button
-              className="user-info user-profile-btn"
-              onClick={() => navigate('/dokter/profile')}
-            >
-              <div className="user-avatar">{userInitial}</div>
-
-              <div className="user-details">
-                <p className="user-name">{userName}</p>
-                <p className="user-role">Klik untuk Profile</p>
-              </div>
-
-              <FaUserCircle style={{ marginLeft: 'auto', color: '#4f46e5' }} />
-            </button>
-
-
+            className="user-info user-profile-btn"
+            onClick={() => navigate('/dokter/profile')}
+            title="Profile"
+            style={{ display: 'flex', alignItems: 'center', width: '100%' }}
+          >
+            <p style={{ margin: 0, fontSize: '13px', color: '#000000' }}>{userName}</p>
+            <span style={{
+              fontSize: '11px',
+              color: '#000000',
+              marginLeft: 'auto',
+              whiteSpace: 'nowrap',
+            }}>
+              Profile
+            </span>
+          </button>
           <button className="logout-btn" onClick={handleLogout}>
             <FaSignOutAlt style={{ marginRight: 6 }} />
             Logout

@@ -61,6 +61,7 @@ export default function Jadwal() {
         { method: 'get', url: '/admin/jadwal' },
         { method: 'get', url: '/jadwal' },
       ]);
+      console.log('RAW jadwal:', JSON.stringify(res.data, null, 2));
       setSchedules(unpackCollection(res.data));
     } catch (err) {
       console.error(err);

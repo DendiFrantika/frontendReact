@@ -68,12 +68,6 @@ export default function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-  const quickLinks = [
-    { icon: '👤', label: 'Profil',        to: '/pasien/profil' },
-    { icon: '📝', label: 'Daftar Berobat', to: '/pasien/daftar-berobat' },
-    { icon: '📜', label: 'Riwayat',        to: '/pasien/riwayat' },
-    { icon: '⏳', label: 'Antrian',        to: '/pasien/antrian' },
-  ];
 
   return (
     <div className="admin-layout">

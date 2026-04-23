@@ -18,7 +18,7 @@ const defaultForm = {
   nama: '', no_identitas: '', spesialisasi: '', no_lisensi: '',
   no_telepon: '', email: '', alamat: '',
   jam_praktek_mulai: '', jam_praktek_selesai: '',
-  hari_libur: '', status: '',
+  hari_libur: '', status: '',password: '',
 };
 
 const defaultJadwalForm = {
@@ -31,7 +31,7 @@ export default function Dokter() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState(defaultForm);
+  const [formData, setFormData] = useState({ ...defaultForm });;
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -88,18 +88,30 @@ export default function Dokter() {
   }, [searchDebounced]);
 
   const fetchSchedules = useCallback(async () => {
-    setJadwalLoading(true);
-    try {
-      const res = await requestWithFallback([
-        { method: 'get', url: '/admin/jadwal' },
-      ]);
-      setSchedules(unpackCollection(res.data));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setJadwalLoading(false);
+  setJadwalLoading(true);
+  try {
+    const res = await requestWithFallback([
+      { method: 'get', url: '/admin/jadwal', params: { per_page: 100 } }, // ✅ ambil semua
+    ]);
+
+    const raw = res.data;
+    // ✅ parse manual lebih eksplisit
+    let list = [];
+    if (Array.isArray(raw)) {
+      list = raw;
+    } else if (Array.isArray(raw?.data)) {
+      list = raw.data;
     }
-  }, []);
+
+    console.log('list length:', list.length);
+    console.log('sample item:', list[0]);
+    setSchedules(list);
+  } catch (err) {
+    console.error('fetchSchedules error:', err);
+  } finally {
+    setJadwalLoading(false);
+  }
+}, []);
 
   useEffect(() => { fetchDoctors(); }, [fetchDoctors]);
   useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
@@ -525,6 +537,21 @@ export default function Dokter() {
                 <label className="dk-form-label">No. telepon <span>*</span></label>
                 <input type="text" name="no_telepon" value={formData.no_telepon} onChange={handleChange} required maxLength={20} placeholder="08xx..." />
                 {renderError('no_telepon')}
+              </div>
+              <div className="dk-form-group">
+                <label className="dk-form-label">Password Login</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password ?? ''}
+                  onChange={handleChange}
+                  maxLength={50}
+                  placeholder="Kosongkan untuk pakai default: password123"
+                />
+                <small style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  Jika dikosongkan, password default adalah <strong>password123</strong>
+                </small>
+                {renderError('password')}
               </div>
               <div className="dk-form-group">
                 <label className="dk-form-label">Hari libur</label>
