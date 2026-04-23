@@ -16,9 +16,9 @@ const STEPS = [
 
 export default function AlurAdminKasir() {
   return (
-    <AdminLayout title="Alur kerja Admin–Kasir">
+    <AdminLayout title="">
       <div className="alur-flow-page">
-
+        <h1 className="dk-page-title">Alur kerja Admin–Kasir</h1>
         <p className="alur-intro">
           Bagan berikut merangkum alur operasional dan administrasi untuk peran
           admin–kasir: dari login, pengelolaan master data, layanan front office,

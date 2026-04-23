@@ -37,31 +37,31 @@ const DokterLayout = ({ title, children }) => {
 
             <li>
               <Link to="/dokter" className="sidebar-link">
-                <FaTachometerAlt /> Dashboard
+                Dashboard
               </Link>
             </li>
 
             <li>
               <Link to="/dokter/antrian" className="sidebar-link">
-                <FaUserInjured /> Antrian
+                 Antrian
               </Link>
             </li>
 
             <li>
               <Link to="/dokter/diagnosis" className="sidebar-link">
-                <FaNotesMedical /> Diagnosis
+                 Diagnosis
               </Link>
             </li>
 
             <li>
               <Link to="/dokter/jadwal" className="sidebar-link">
-                <FaCalendarAlt /> Jadwal
+                 Jadwal
               </Link>
             </li>
 
             <li>
               <Link to="/dokter/riwayat" className="sidebar-link">
-                <FaHistory /> Riwayat
+                Riwayat
               </Link>
             </li>
 

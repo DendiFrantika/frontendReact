@@ -13,7 +13,7 @@ export default function DashboardDokter() {
   const [dokter, setDokter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [activities, setActivities] = useState([]);
   const { isAuthenticated, loading: authLoading } = useAuth();
 
   // greeting otomatis
@@ -23,6 +23,14 @@ export default function DashboardDokter() {
     if (hour < 18) return 'Selamat siang';
     return 'Selamat malam';
   };
+const fetchAktivitas = async () => {
+  try {
+    const res = await axiosInstance.get('/dokter/aktivitas-hari-ini');
+    setActivities(res.data.data || []);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const fetchDashboardData = useCallback(async (signal) => {
     if (!isAuthenticated || authLoading) return;
@@ -51,7 +59,22 @@ export default function DashboardDokter() {
       }
     }
   }, [isAuthenticated, authLoading]);
+useEffect(() => {
+  const controller = new AbortController();
 
+  fetchDashboardData(controller.signal);
+  fetchAktivitas(); // 🔥 INI YANG KURANG
+
+  const interval = setInterval(() => {
+    fetchDashboardData(controller.signal);
+    fetchAktivitas(); // 🔥 biar realtime juga
+  }, 10000);
+
+  return () => {
+    controller.abort();
+    clearInterval(interval);
+  };
+}, [fetchDashboardData]);
   useEffect(() => {
     const controller = new AbortController();
     fetchDashboardData(controller.signal);
@@ -105,34 +128,58 @@ export default function DashboardDokter() {
       {loading ? (
         <p>Memuat data dashboard...</p>
       ) : (
-        <div className="stats-grid">
+       <div className="stats-grid">
 
-          <div className="stat-card">
-            <div className="stat-icon">📅</div>
-            <div className="stat-info">
-              <h3>Janji Temu Hari Ini</h3>
-              <p className="stat-value">{stats.todayAppointments}</p>
-            </div>
-          </div>
+  <div className="stat-card">
+    <div className="stat-info">
+      <h3>Janji Temu Hari Ini</h3>
+      <p className="stat-value">{stats.todayAppointments}</p>
+    </div>
+  </div>
 
-          <div className="stat-card">
-            <div className="stat-icon">📋</div>
-            <div className="stat-info">
-              <h3>Diagnosis Pending</h3>
-              <p className="stat-value">{stats.pendingDiagnoses}</p>
-            </div>
-          </div>
+  <div className="stat-card">
+    <div className="stat-info">
+      <h3>Diagnosis Pending</h3>
+      <p className="stat-value">{stats.pendingDiagnoses}</p>
+    </div>
+  </div>
 
-          <div className="stat-card">
-            <div className="stat-icon">✅</div>
-            <div className="stat-info">
-              <h3>Selesai Hari Ini</h3>
-              <p className="stat-value">{stats.completedToday}</p>
-            </div>
-          </div>
+  <div className="stat-card">
+    <div className="stat-info">
+      <h3>Selesai Hari Ini</h3>
+      <p className="stat-value">{stats.completedToday}</p>
+    </div>
+  </div>
 
         </div>
       )}
+
+     <div className="activity-list">
+  {activities.length === 0 ? (
+    <p>Tidak ada aktivitas hari ini</p>
+  ) : (
+    activities.map((item, index) => (
+      <div className="activity-item" key={index}>
+        <span className="activity-time">{item.time}</span>
+        <span className="activity-desc">{item.desc}</span>
+      </div>
+    ))
+  )}
+</div>
+      {/* TIPS DAN PENGINGAT */}
+      <div className="dashboard-section">
+        <h2>Tips & Pengingat</h2>
+        <div className="tips-container">
+          <div className="tip-card">
+            <h4>Update Status Pasien</h4>
+            <p>Jangan lupa update status diagnosis setelah pemeriksaan.</p>
+          </div>
+          <div className="tip-card">
+            <h4>Jadwal Istirahat</h4>
+            <p>Ambil istirahat 15 menit setiap 2 jam untuk kesehatan.</p>
+          </div>
+        </div>
+      </div>
 
     </DokterLayout>
   );

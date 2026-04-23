@@ -90,16 +90,6 @@ export default function Riwayat() {
           <p>Riwayat kunjungan dan rekam medis singkat</p>
         </header>
 
-        <div className="pasien-toolbar">
-          <button
-            type="button"
-            className="btn small"
-            onClick={handleRefresh}
-            disabled={loading || refreshing}
-          >
-            {refreshing ? 'Memuat…' : 'Segarkan'}
-          </button>
-        </div>
 
         {/* ── Statistik ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '18px' }}>
@@ -124,134 +114,103 @@ export default function Riwayat() {
         {loading ? (
           <div className="loading">Memuat riwayat…</div>
         ) : history.length > 0 ? (
-          <div className="pasien-table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Tgl. Daftar</th>
-                  <th>No. Antrian</th>
-                  <th>Dokter</th>
-                  <th>Spesialis</th>
-                  <th>Keluhan</th>
-                  <th>Status</th>
-                  <th>Rekam Medis</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((h) => (
-                  <React.Fragment key={h.id}>
+          
+            <div className="pasien-table-container">
+  <table className="pasien-table">
+    <thead>
+      <tr>
+        <th>Tanggal & Jam</th>
+        <th>Antrian</th>
+        <th>Informasi Dokter</th>
+        <th>Keluhan</th>
+        <th>Status</th>
+        <th className="text-center">Rekam Medis</th>
+      </tr>
+    </thead>
+    <tbody>
+      {history.map((h) => (
+        <React.Fragment key={h.id}>
+          {/* Baris Utama */}
+          <tr className={expanded === h.id ? 'row-active' : ''}>
+            <td>
+              <div className="font-bold">{fmtDate(h.dateDaftar)}</div>
+              <div className="text-muted">{h.time} WIB</div>
+            </td>
+            <td>
+              <span className="badge-antrian">#{h.noAntrian}</span>
+            </td>
+            <td>
+              <div className="font-bold">{h.doctorName}</div>
+              <div className="text-muted">{h.specialty}</div>
+            </td>
+            <td className="cell-complaint">
+              {h.complaint}
+            </td>
+            <td>
+              <span 
+                className="status-badge" 
+                style={{
+                  backgroundColor: (STATUS_COLOR[h.status] ?? STATUS_COLOR.waiting).background,
+                  color: (STATUS_COLOR[h.status] ?? STATUS_COLOR.waiting).color
+                }}
+              >
+                {STATUS_LABEL[h.status] ?? h.status}
+              </span>
+            </td>
+            <td className="text-center">
+              {h.diagnosis ? (
+                <button
+                  type="button"
+                  className={`btn-toggle ${expanded === h.id ? 'active' : ''}`}
+                  onClick={() => setExpanded(expanded === h.id ? null : h.id)}
+                >
+                  {expanded === h.id ? '▲ Tutup' : '▼ Lihat Detail'}
+                </button>
+              ) : (
+                <span className="text-disabled italic">Belum tersedia</span>
+              )}
+            </td>
+          </tr>
 
-                    {/* ── Baris utama ── */}
-                    <tr>
-                      <td>
-                        <div>{fmtDate(h.dateDaftar)}</div>
-                        {h.time !== '-' && (
-                          <div style={{ fontSize: '12px', color: '#94a3b8' }}>{h.time}</div>
-                        )}
-                      </td>
-                      <td style={{ fontSize: '13px', color: '#64748b' }}>{h.noAntrian}</td>
-                      <td>{h.doctorName}</td>
-                      <td>{h.specialty}</td>
-                      <td style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {h.complaint}
-                      </td>
-                      <td>
-                        <span style={{
-                          ...(STATUS_COLOR[h.status] ?? STATUS_COLOR.waiting),
-                          padding: '3px 10px',
-                          borderRadius: '999px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}>
-                          {STATUS_LABEL[h.status] ?? h.status}
-                        </span>
-                      </td>
-                      <td>
-                        {h.diagnosis ? (
-                          <button
-                            type="button"
-                            onClick={() => setExpanded(expanded === h.id ? null : h.id)}
-                            style={{
-                              background: expanded === h.id ? '#eff6ff' : 'none',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '6px',
-                              padding: '4px 10px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              color: '#475569',
-                            }}
-                          >
-                            {expanded === h.id ? '▲ Tutup' : '▼ Lihat'}
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Belum ada</span>
-                        )}
-                      </td>
-                    </tr>
-
-                    {/* ── Baris detail rekam medis ── */}
-                    {expanded === h.id && (
-                      <tr style={{ background: '#f8fafc' }}>
-                        <td colSpan={7} style={{ padding: '16px 20px' }}>
-
-                          {/* Header detail */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>
-                              📋 Rekam Medis Singkat
-                            </span>
-                            {h.dateKunjungan && (
-                              <span style={{ fontSize: '12px', color: '#64748b', background: '#e2e8f0', padding: '2px 8px', borderRadius: '999px' }}>
-                                Diperiksa: {fmtDate(h.dateKunjungan, { day: '2-digit', month: 'long', year: 'numeric' })}
-                              </span>
-                            )}
-                            {h.dateDaftar && (
-                              <span style={{ fontSize: '12px', color: '#64748b', background: '#e2e8f0', padding: '2px 8px', borderRadius: '999px' }}>
-                                Tgl. Daftar: {fmtDate(h.dateDaftar, { day: '2-digit', month: 'long', year: 'numeric' })}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Grid detail */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-                            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px' }}>
-                              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, marginBottom: '6px', letterSpacing: '0.05em' }}>
-                                DIAGNOSIS
-                              </div>
-                              <div style={{ fontSize: '14px', color: '#1e293b', lineHeight: 1.5 }}>
-                                {h.diagnosis}
-                              </div>
-                            </div>
-
-                            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px' }}>
-                              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, marginBottom: '6px', letterSpacing: '0.05em' }}>
-                                TINDAKAN
-                              </div>
-                              <div style={{ fontSize: '14px', color: '#1e293b', lineHeight: 1.5 }}>
-                                {h.tindakan ?? '-'}
-                              </div>
-                            </div>
-
-                            {h.catatan && (
-                              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px' }}>
-                                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, marginBottom: '6px', letterSpacing: '0.05em' }}>
-                                  CATATAN DOKTER
-                                </div>
-                                <div style={{ fontSize: '14px', color: '#1e293b', lineHeight: 1.5 }}>
-                                  {h.catatan}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                        </td>
-                      </tr>
+          {/* Baris Detail (Rekam Medis) */}
+          {expanded === h.id && (
+            <tr className="detail-row">
+              <td colSpan={6}>
+                <div className="detail-container">
+                  <div className="detail-header">
+                    <span className="icon">📋</span>
+                    <strong>Ringkasan Rekam Medis</strong>
+                    {h.dateKunjungan && (
+                      <span className="visit-tag">Kunjungan: {fmtDate(h.dateKunjungan, true)}</span>
                     )}
-
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  </div>
+                  
+                  <div className="detail-grid">
+                    <div className="detail-card">
+                      <label>Diagnosis</label>
+                      <p>{h.diagnosis}</p>
+                    </div>
+                    <div className="detail-card">
+                      <label>Tindakan</label>
+                      <p>{h.tindakan || '-'}</p>
+                    </div>
+                    {h.catatan && (
+                      <div className="detail-card">
+                        <label>Catatan Dokter</label>
+                        <p>{h.catatan}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </td>
+            </tr>
+          )}
+        </React.Fragment>
+      ))}
+    </tbody>
+  </table>
+</div>
+          
         ) : (
           <div className="pasien-empty">
             <strong style={{ display: 'block', marginBottom: '8px', color: '#334155' }}>

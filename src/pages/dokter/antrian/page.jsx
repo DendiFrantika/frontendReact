@@ -145,7 +145,6 @@ export default function Antrian() {
           <div className="ant-list">
             {filtered.length === 0 ? (
               <div className="ant-empty">
-                <div className="ico">🗂️</div>
                 <p>Tidak ada antrian untuk filter ini.</p>
               </div>
             ) : filtered.map((item) => {
@@ -157,9 +156,9 @@ export default function Antrian() {
                   <div className="ant-info">
                     <h3>{item.pasien?.nama ?? '-'}</h3>
                     <div className="meta">
-                      <span>📅 {fmt(item.tanggal_pendaftaran)}</span>
-                      <span>🕐 {item.jam_kunjungan ?? '-'}</span>
-                      <span>🪪 {item.no_antrian ?? '-'}</span>
+                      <span>{fmt(item.tanggal_pendaftaran)}</span>
+                      <span>{item.jam_kunjungan ?? '-'}</span>
+                      <span>{item.no_antrian ?? '-'}</span>
                     </div>
                     <span className="kelu">Keluhan: {item.keluhan ?? '-'}</span>
                   </div>

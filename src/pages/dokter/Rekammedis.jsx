@@ -266,10 +266,10 @@ export default function RekamMedis() {
   const isReadOnly = !!existing;
 
   const TABS = [
-    { id: 'pemeriksaan', label: '🩺 Pemeriksaan'       },
-    { id: 'diagnosis',   label: '📋 Diagnosis ICD-10'  },
-    { id: 'tindakan',    label: '⚕️ Tindakan Medis'    },
-    { id: 'resep',       label: '💊 E-Resep'           },
+    { id: 'pemeriksaan', label: ' Pemeriksaan'       },
+    { id: 'diagnosis',   label: ' Diagnosis ICD-10'  },
+    { id: 'tindakan',    label: ' Tindakan Medis'    },
+    { id: 'resep',       label: ' E-Resep'           },
   ];
 
   if (loading) return (
@@ -305,8 +305,8 @@ export default function RekamMedis() {
         }
 
         .rm-tabs {
-          display: flex; gap: 4px; background: #F3F4F6;
-          border-radius: 12px; padding: 4px; margin-bottom: 20px;
+          display: flex; gap: 4px; 
+           padding: 4px; margin-bottom: 20px;
         }
         .rm-tab {
           flex: 1; padding: 10px 6px; border-radius: 9px; border: none;

@@ -1,94 +1,175 @@
-.profile-header-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  padding: 20px;
-  border-radius: 14px;
-  color: white;
-  margin-bottom: 20px;
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25);
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg-body: #f9fafb;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
 }
 
-.avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+.profile-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+/* HERO SECTION */
+.profile-hero {
   background: white;
-  color: #6366f1;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.hero-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  background: var(--primary);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+}
+
+.hero-text h2 {
+  margin: 0;
   font-size: 24px;
-  font-weight: bold;
+  color: var(--text-main);
 }
 
-.badge {
-  background: rgba(255,255,255,0.2);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
+.hero-text p {
+  margin: 4px 0 12px 0;
+  color: var(--text-muted);
+  font-size: 16px;
 }
 
+.hero-badge {
+  display: inline-block;
+  background: #f3f4f6;
+  color: var(--text-main);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+}
+
+/* GRID & CARDS */
 .profile-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}
+
+.profile-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  margin-bottom: 24px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-main);
+}
+
+.card-header p {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* FORM ELEMENTS */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.card {
-  background: white;
-  padding: 18px;
-  border-radius: 14px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.06);
-}
-
-.card h3 {
-  margin-bottom: 12px;
-  color: #2c3e50;
-}
-
-.card input {
+input {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+input:focus {
   outline: none;
-  transition: 0.2s;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
-.card input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+/* BUTTONS */
+button {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  transition: all 0.2s;
+  margin-top: 10px;
 }
 
-.card button {
-  width: 100%;
-  padding: 10px;
-  background: #6366f1;
+.btn-primary {
+  background: var(--primary);
   color: white;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
 }
 
-.card button:hover {
-  background: #4f46e5;
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
-.card .danger {
-  background: #ef4444;
+.btn-outline-danger {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #fecaca;
 }
 
-.card .danger:hover {
-  background: #dc2626;
+.btn-outline-danger:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
 }
 
-.loading-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
+.loading-state {
+  padding: 40px;
   text-align: center;
+  color: var(--text-muted);
 }

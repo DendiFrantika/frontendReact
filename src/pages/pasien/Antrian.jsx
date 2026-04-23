@@ -81,17 +81,6 @@ export default function Antrian() {
           <p>Status antrian kunjungan Anda</p>
         </header>
 
-        <div className="pasien-toolbar">
-          <button
-            type="button"
-            className="btn small"
-            onClick={handleRefresh}
-            disabled={loading || refreshing}
-          >
-            {refreshing ? 'Memuat…' : 'Segarkan'}
-          </button>
-        </div>
-
         {error && (
           <div className="pasien-banner pasien-banner--error" role="alert">
             {error}

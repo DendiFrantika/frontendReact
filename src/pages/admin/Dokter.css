@@ -119,37 +119,32 @@
 
 /* ── VIEW TOGGLE ── */
 .dk-view-toggle {
-  display: flex;
-  gap: 0;
-  border: 0.5px solid #d1d5db;
-  border-radius: 8px;
-  overflow: hidden;
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 10px;
 }
 
 .dk-view-btn {
-  padding: 7px 16px;
-  font-size: 13px;
-  background: #fff;
-  color: #6b7280;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b; /* Warna teks pudar (slate-500) */
   border: none;
+  background: none;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.dk-view-btn + .dk-view-btn {
-  border-left: 0.5px solid #d1d5db;
+  border-radius: 7px;
+  transition: all 0.2s ease;
 }
 
 .dk-view-btn:hover {
-  background: #f9fafb;
+  color: #1e293b; /* Teks lebih gelap saat hover */
 }
 
-.dk-view-btn-active {
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-weight: 500;
+.dk-view-btn.active {
+  background-color: #ffffff; /* Putih bersih saat aktif */
+  color: #4f46e5; /* Indigo untuk aksen */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Shadow sangat tipis */
 }
-
 /* ── BUTTONS ── */
 .dk-btn-primary {
   padding: 8px 18px;

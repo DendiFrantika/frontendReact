@@ -1,0 +1,89 @@
+.jadwal-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.jadwal-header-simple {
+  margin-bottom: 30px;
+  border-left: 4px solid #4f46e5;
+  padding-left: 16px;
+}
+
+.jadwal-header-simple h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #111827;
+}
+
+.jadwal-header-simple p {
+  margin: 4px 0 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Grid Layout */
+.jadwal-grid-minimal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* Card Styling */
+.jadwal-card-clean {
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.jadwal-card-clean h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.time-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.time-value {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Gaya untuk Status Non-Aktif (Libur) */
+.jadwal-card-clean.is-off {
+  background: #f9fafb;
+  border-color: #f3f4f6;
+  box-shadow: none;
+}
+
+.jadwal-card-clean.is-off h4,
+.jadwal-card-clean.is-off .time-value {
+  color: #d1d5db; /* Teks pudar */
+}
+
+.jadwal-card-clean.is-off .time-label {
+  color: #e5e7eb;
+}
+
+/* Message state */
+.state-msg {
+  grid-column: 1 / -1;
+  padding: 40px;
+  text-align: center;
+  color: #9ca3af;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px dashed #f3f4f6;
+}

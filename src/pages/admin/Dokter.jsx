@@ -409,23 +409,23 @@ export default function Dokter() {
       {/* ===== TAB JADWAL ===== */}
       {activeTab === 'jadwal' && (
         <>
-          <div className="dk-toolbar">
-            <div className="dk-toolbar-left">
-              <div className="dk-view-toggle">
-                <button
-                  className={`dk-view-btn ${viewMode === 'hari' ? 'dk-view-btn-active' : ''}`}
-                  onClick={() => setViewMode('hari')}
-                >
-                  Per Hari
-                </button>
-                <button
-                  className={`dk-view-btn ${viewMode === 'dokter' ? 'dk-view-btn-active' : ''}`}
-                  onClick={() => setViewMode('dokter')}
-                >
-                  Per Dokter
-                </button>
-              </div>
-            </div>
+         <div className="dk-toolbar">
+  <div className="dk-toolbar-left">
+    <div className="dk-view-toggle">
+      <button
+        className={`dk-view-btn ${viewMode === 'hari' ? 'active' : ''}`}
+        onClick={() => setViewMode('hari')}
+      >
+        Per Hari
+      </button>
+      <button
+        className={`dk-view-btn ${viewMode === 'dokter' ? 'active' : ''}`}
+        onClick={() => setViewMode('dokter')}
+      >
+        Per Dokter
+      </button>
+    </div>
+  </div>
             <div className="dk-toolbar-right">
               <span className="dk-count">Total {schedules.length} jadwal</span>
               <button

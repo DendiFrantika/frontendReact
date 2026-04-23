@@ -138,7 +138,7 @@ export default function Pendaftaran() {
   const hasActiveFilter = filterStatus || filterDate;
 
   return (
-    <AdminLayout title="Pendaftaran">
+    <AdminLayout title="">
 
       {/* ── PAGE HEADER ── */}
       <div className="pnd-page-header">

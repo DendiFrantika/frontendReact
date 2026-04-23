@@ -236,7 +236,13 @@ useEffect(() => {
   };
 
   return (
-    <AdminLayout title="Manajemen Pasien">
+    <AdminLayout title="">
+      <div className="dk-page-header">
+        <div>
+          <h1 className="dk-page-title">Manajemen Pasien</h1>
+          <p className="dk-page-sub">Kelola data pasien dan informasi medis</p>
+        </div>
+      </div>
       <div className="container">
         <button className="btn-add" onClick={() => { setShowForm(true); resetForm(); }}>
           + Tambah Pasien

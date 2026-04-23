@@ -3,11 +3,9 @@ import Sidebar from '../../components/Sidebar';
 import axiosInstance from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
-import '../admin/Dashboard.css';
 import './pasien-pages.css';
 import { normalizeProfile } from './pasien-helpers';
 
-// ✅ normalize langsung di sini, sesuai struktur API yang sudah diketahui
 const normalizeAppointment = (item) => ({
   id: item.id,
   date: item.tanggal_pendaftaran
@@ -15,19 +13,15 @@ const normalizeAppointment = (item) => ({
         day: '2-digit', month: 'long', year: 'numeric',
       })
     : '-',
-  time: item.jam_kunjungan
-    ? item.jam_kunjungan.substring(0, 5)
-    : '-',
+  time: item.jam_kunjungan ? item.jam_kunjungan.substring(0, 5) : '-',
   doctorName: item.dokter?.nama ?? '-',
-  specialty:  item.dokter?.spesialisasi ?? '-',
-  status:     item.status ?? '-',
-  noAntrian:  item.no_antrian ?? '-',
+  specialty: item.dokter?.spesialisasi ?? '-',
+  status: item.status ?? 'Menunggu',
 });
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
-  const [pasienId, setPasienId] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,29 +30,19 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      // ✅ Fetch profile & appointments secara paralel
       const [profileRes, apptRes] = await Promise.all([
         axiosInstance.get('/pasien/profile'),
         axiosInstance.get('/pasien/appointments'),
       ]);
 
-      // Profile
       const profileBody = profileRes.data?.data ?? profileRes.data;
       setProfile(normalizeProfile(profileBody, user));
-      setPasienId(profileBody?.id ?? null);
 
-      // Appointments — data ada di .data (pagination Laravel)
       const rawList = apptRes.data?.data ?? apptRes.data ?? [];
       setAppointments(rawList.map(normalizeAppointment));
-
     } catch (err) {
-      console.error('Error loading pasien dashboard data', err);
-      setError(
-        err.response?.data?.message ??
-          'Gagal memuat data. Periksa koneksi atau coba lagi nanti.'
-      );
-      setProfile(normalizeProfile(null, user));
-      setAppointments([]);
+      console.error(err);
+      setError('Gagal memuat data dashboard.');
     } finally {
       setLoading(false);
     }
@@ -68,40 +52,58 @@ export default function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-
   return (
     <div className="admin-layout">
+      {/* Sidebar akan berada di kiri karena parent (.admin-layout) adalah flex */}
       <Sidebar />
-      <div className="admin-content">
+
+      <main className="admin-content">
         <header className="pasien-page-header">
-          <h1>Dashboard Pasien</h1>
-          {profile && (
-              <div className="info-box">
-                <p>Selamat datang, <strong>{profile.name}</strong>!</p>
-              </div>
-            )}
+          <h1>Halo, {profile?.name || 'Pasien'} 👋</h1>
+          <p>Selamat datang kembali. Berikut adalah ringkasan kesehatan Anda.</p>
         </header>
 
         {error && (
-          <div className="pasien-banner pasien-banner--error" role="alert">
-            {error}
-          </div>
+          <div style={{ color: 'red', marginBottom: '20px' }}>{error}</div>
         )}
 
         {loading ? (
-          <div className="loading">Memuat data…</div>
+          <div className="loading">Memuat informasi dashboard...</div>
         ) : (
-          <>
-            
+          <div className="dashboard-container">
+            {/* STAT CARDS */}
+            <div className="pasien-stats-grid">
+              <div className="stat-card">
+                <span>Total Janji Temu</span>
+                <h3>{appointments.length}</h3>
+              </div>
+              <div className="stat-card">
+                <span>Status Akun</span>
+                <h3 style={{ color: '#059669' }}>Aktif</h3>
+              </div>
+            </div>
 
-            <div className="dashboard-section" style={{ marginTop: 24 }}>
-              <h2>Janji temu mendatang</h2>
+            <div className="dashboard-section">
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '20px' 
+              }}>
+                <h2 style={{ fontSize: '1.25rem', color: '#111827', margin: 0 }}>
+                  Jadwal Kunjungan Terdekat
+                </h2>
+                <Link to="/pasien/daftar-berobat" className="btn-primary">
+                  + Buat Janji
+                </Link>
+              </div>
+
               {appointments.length > 0 ? (
                 <div className="pasien-table-wrap">
-                  <table className="table">
+                  <table className="pasien-table">
                     <thead>
                       <tr>
-                        <th>Tanggal</th>
+                        <th>Tanggal Kunjungan</th>
                         <th>Dokter</th>
                         <th>Spesialis</th>
                         <th>Jam</th>
@@ -111,11 +113,21 @@ export default function Dashboard() {
                     <tbody>
                       {appointments.map((a) => (
                         <tr key={a.id}>
-                          <td>{a.date}</td>
+                          <td style={{ fontWeight: 600 }}>{a.date}</td>
                           <td>{a.doctorName}</td>
-                          <td>{a.specialty}</td>
-                          <td>{a.time}</td>
-                          <td>{a.status}</td>
+                          <td>
+                            <span style={{ color: '#6b7280' }}>{a.specialty}</span>
+                          </td>
+                          <td>{a.time} WIB</td>
+                          <td>
+                            <span className={`badge ${
+                              a.status.toLowerCase() === 'selesai' 
+                                ? 'badge-success' 
+                                : 'badge-pending'
+                            }`}>
+                              {a.status}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -123,14 +135,16 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="pasien-empty">
-                  Tidak ada janji temu mendatang.{' '}
-                  <Link to="/pasien/daftar-berobat">Daftar berobat</Link>
+                  <p>Sepertinya Anda belum memiliki jadwal janji temu dengan dokter.</p>
+                  <Link to="/pasien/daftar-berobat" className="btn-primary">
+                    Daftar Berobat Sekarang
+                  </Link>
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
