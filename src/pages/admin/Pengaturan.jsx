@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import axiosInstance from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
-// import './Pengaturan.css';
+import './Pengaturan.css';
 
 export default function Pengaturan() {
   const { user, logout } = useAuth();
@@ -17,22 +17,19 @@ export default function Pengaturan() {
     new_password_confirmation: '',
   });
 
-  // ===== HELPER =====
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 3000);
   };
 
-  // ===== UPDATE PASSWORD =====
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
 
     if (passwordData.new_password !== passwordData.new_password_confirmation) {
-      return showMessage('error', 'Konfirmasi password tidak cocok!');
+      return showMessage('error', 'Konfirmasi password tidak cocok');
     }
 
     setLoading(true);
-
     try {
       await axiosInstance.post('/auth/change-password', {
         current_password: passwordData.current_password,
@@ -40,211 +37,157 @@ export default function Pengaturan() {
         password_confirmation: passwordData.new_password_confirmation,
       });
 
-      showMessage('success', 'Password berhasil diganti!');
+      showMessage('success', 'Password berhasil diperbarui');
       setPasswordData({
         current_password: '',
         new_password: '',
         new_password_confirmation: '',
       });
     } catch (err) {
-      showMessage(
-        'error',
-        err.response?.data?.message ||
-        JSON.stringify(err.response?.data?.errors) ||
-        'Gagal mengganti password'
-      );
+      showMessage('error', 'Gagal mengganti password');
     } finally {
       setLoading(false);
     }
   };
 
-  // ===== LOGOUT ALL =====
   const handleLogoutAll = async () => {
-    if (!window.confirm('Yakin ingin logout dari semua perangkat?')) return;
-    try {
-      await axiosInstance.post('/auth/logout');
-      logout();
-    } catch {
-      showMessage('error', 'Gagal logout');
-    }
+    if (!window.confirm('Logout semua perangkat?')) return;
+    await axiosInstance.post('/auth/logout');
+    logout();
   };
 
   const navItems = [
-    { key: 'profile',  icon: '👤', label: 'Profil' },
-    { key: 'security', icon: '🔒', label: 'Keamanan' },
-    { key: 'danger',   icon: '⚠️',  label: 'Zona Bahaya' },
+    { key: 'profile', label: 'Profil' },
+    { key: 'security', label: 'Keamanan' },
+    { key: 'danger', label: 'Akun' },
   ];
 
   return (
-    <AdminLayout title="Pengaturan">
+    <AdminLayout title="">
       <div className="pg-wrapper">
 
         {/* HEADER */}
         <div className="pg-header">
-          <div className="pg-header-inner">
-            <div className="pg-header-icon">⚙️</div>
-            <div>
-              <h2>Pengaturan Akun</h2>
-              <p>Kelola profil dan keamanan akun Anda</p>
-            </div>
-          </div>
+          <h2>Pengaturan Akun</h2>
+          <p>Kelola informasi dan keamanan akun Anda</p>
         </div>
 
-        {/* LAYOUT */}
         <div className="pg-layout">
 
-          {/* SIDEBAR NAV */}
-          <nav className="pg-nav">
+          {/* SIDEBAR */}
+          <div className="pg-nav">
             {navItems.map(tab => (
               <button
                 key={tab.key}
-                className={`pg-nav-btn ${activeTab === tab.key ? 'active' : ''} ${tab.key === 'danger' ? 'danger' : ''}`}
+                className={`pg-nav-btn ${activeTab === tab.key ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.key)}
               >
-                <span className="pg-nav-icon">{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
-          </nav>
+          </div>
 
-          {/* MAIN CARD */}
+          {/* CONTENT */}
           <div className="pg-card">
 
-            {/* ALERT */}
             {message && (
               <div className={`pg-alert ${message.type}`}>
-                <span>{message.type === 'success' ? '✅' : '❌'}</span>
                 {message.text}
               </div>
             )}
 
-            {/* ===== PROFILE ===== */}
+            {/* PROFILE */}
             {activeTab === 'profile' && (
-              <div key="profile">
-                <h3 className="pg-section-title">
-                  👤 Informasi Akun
-                </h3>
+              <>
+                <h3 className="pg-title">Informasi Akun</h3>
 
                 <div className="pg-info-grid">
-                  <div className="pg-info-item">
-                    <div className="pg-info-label">Nama Lengkap</div>
-                    <div className="pg-info-value">{user?.name || '—'}</div>
+                  <div>
+                    <label>Nama</label>
+                    <p>{user?.name}</p>
                   </div>
 
-                  <div className="pg-info-item">
-                    <div className="pg-info-label">Email</div>
-                    <div className="pg-info-value">{user?.email || '—'}</div>
+                  <div>
+                    <label>Email</label>
+                    <p>{user?.email}</p>
                   </div>
 
-                  <div className="pg-info-item">
-                    <div className="pg-info-label">Role</div>
-                    <div className="pg-info-value">
-                      <span className="pg-badge">
-                        {user?.role || 'admin'}
-                      </span>
-                    </div>
+                  <div>
+                    <label>Role</label>
+                    <p>{user?.role}</p>
                   </div>
 
-                  <div className="pg-info-item">
-                    <div className="pg-info-label">Terdaftar Sejak</div>
-                    <div className="pg-info-value">
+                  <div>
+                    <label>Terdaftar</label>
+                    <p>
                       {user?.created_at
-                        ? new Date(user.created_at).toLocaleDateString('id-ID', {
-                            day: 'numeric', month: 'long', year: 'numeric'
-                          })
-                        : '—'}
-                    </div>
+                        ? new Date(user.created_at).toLocaleDateString('id-ID')
+                        : '-'}
+                    </p>
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
-            {/* ===== SECURITY ===== */}
+            {/* SECURITY */}
             {activeTab === 'security' && (
-              <div key="security">
-                <h3 className="pg-section-title">
-                  🔒 Ganti Password
-                </h3>
+              <>
+                <h3 className="pg-title">Ganti Password</h3>
 
-                <form className="pg-form" onSubmit={handlePasswordUpdate}>
-                  <div className="pg-field">
-                    <label className="pg-label">Password Lama</label>
-                    <input
-                      type="password"
-                      className="pg-input"
-                      placeholder="Masukkan password lama"
-                      value={passwordData.current_password}
-                      onChange={(e) =>
-                        setPasswordData({ ...passwordData, current_password: e.target.value })
-                      }
-                    />
-                  </div>
+                <form onSubmit={handlePasswordUpdate} className="pg-form">
+                  <input
+                    type="password"
+                    placeholder="Password lama"
+                    value={passwordData.current_password}
+                    onChange={(e) =>
+                      setPasswordData({ ...passwordData, current_password: e.target.value })
+                    }
+                  />
 
-                  <div className="pg-field">
-                    <label className="pg-label">Password Baru</label>
-                    <input
-                      type="password"
-                      className="pg-input"
-                      placeholder="Minimal 8 karakter"
-                      value={passwordData.new_password}
-                      onChange={(e) =>
-                        setPasswordData({ ...passwordData, new_password: e.target.value })
-                      }
-                    />
-                  </div>
+                  <input
+                    type="password"
+                    placeholder="Password baru"
+                    value={passwordData.new_password}
+                    onChange={(e) =>
+                      setPasswordData({ ...passwordData, new_password: e.target.value })
+                    }
+                  />
 
-                  <div className="pg-field">
-                    <label className="pg-label">Konfirmasi Password Baru</label>
-                    <input
-                      type="password"
-                      className="pg-input"
-                      placeholder="Ulangi password baru"
-                      value={passwordData.new_password_confirmation}
-                      onChange={(e) =>
-                        setPasswordData({
-                          ...passwordData,
-                          new_password_confirmation: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
+                  <input
+                    type="password"
+                    placeholder="Konfirmasi password"
+                    value={passwordData.new_password_confirmation}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        new_password_confirmation: e.target.value,
+                      })
+                    }
+                  />
 
-                  <hr className="pg-divider" />
-
-                  <button
-                    type="submit"
-                    className="pg-btn pg-btn-primary"
-                    disabled={loading}
-                  >
-                    {loading ? '⏳ Memproses...' : '🔐 Update Password'}
+                  <button disabled={loading}>
+                    {loading ? 'Menyimpan...' : 'Update Password'}
                   </button>
                 </form>
-              </div>
+              </>
             )}
 
-            {/* ===== DANGER ===== */}
+            {/* DANGER */}
             {activeTab === 'danger' && (
-              <div key="danger">
-                <h3 className="pg-section-title" style={{ color: 'var(--color-danger)' }}>
-                  ⚠️ Zona Bahaya
-                </h3>
+              <>
+                <h3 className="pg-title text-danger">Manajemen Akun</h3>
 
-                <div className="pg-danger-card">
+                <div className="pg-danger-box">
                   <div>
-                    <div className="pg-danger-title">Logout Semua Perangkat</div>
-                    <div className="pg-danger-desc">
-                      Semua sesi aktif akan segera dihentikan
-                    </div>
+                    <p className="pg-danger-title">Logout semua perangkat</p>
+                    <span>Sesi login akan dihentikan</span>
                   </div>
 
-                  <button
-                    className="pg-btn pg-btn-danger"
-                    onClick={handleLogoutAll}
-                  >
-                    🚪 Logout Semua
+                  <button className="pg-btn-danger" onClick={handleLogoutAll}>
+                    Logout
                   </button>
                 </div>
-              </div>
+              </>
             )}
 
           </div>

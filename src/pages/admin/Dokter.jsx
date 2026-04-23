@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import AdminCrudModal from '../../components/AdminCrudModal';
@@ -24,9 +26,8 @@ const defaultJadwalForm = {
 };
 
 export default function Dokter() {
-  const [activeTab, setActiveTab] = useState('dokter'); // 'dokter' | 'jadwal'
+  const [activeTab, setActiveTab] = useState('dokter');
 
-  // --- state dokter (sama seperti sebelumnya) ---
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -41,7 +42,6 @@ export default function Dokter() {
   const [searchInput, setSearchInput] = useState('');
   const [searchDebounced, setSearchDebounced] = useState('');
 
-  // --- state jadwal ---
   const [viewMode, setViewMode] = useState('hari');
   const [schedules, setSchedules] = useState([]);
   const [jadwalLoading, setJadwalLoading] = useState(false);
@@ -54,17 +54,17 @@ export default function Dokter() {
   const [jadwalSubmitError, setJadwalSubmitError] = useState('');
 
   const groupedByDay = schedules.reduce((acc, sch) => {
-  if (!acc[sch.hari]) acc[sch.hari] = [];
-  acc[sch.hari].push(sch);
-  return acc;
-}, {});
+    if (!acc[sch.hari]) acc[sch.hari] = [];
+    acc[sch.hari].push(sch);
+    return acc;
+  }, {});
 
-const groupedByDoctor = schedules.reduce((acc, sch) => {
-  const name = sch.dokter?.nama || 'Dokter';
-  if (!acc[name]) acc[name] = [];
-  acc[name].push(sch);
-  return acc;
-}, {});
+  const groupedByDoctor = schedules.reduce((acc, sch) => {
+    const name = sch.dokter?.nama || 'Dokter';
+    if (!acc[name]) acc[name] = [];
+    acc[name].push(sch);
+    return acc;
+  }, {});
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(searchInput.trim()), 400);
@@ -104,7 +104,6 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
   useEffect(() => { fetchDoctors(); }, [fetchDoctors]);
   useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
 
-  // ---- handler dokter (sama seperti sebelumnya, tidak berubah) ----
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -163,7 +162,7 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
       ]);
       fetchDoctors();
       setNotice(`Status dokter ${doc.nama} berhasil diubah.`);
-    } catch (err) {
+    } catch {
       setSubmitError('Gagal mengubah status dokter.');
     }
   };
@@ -178,7 +177,7 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
       await fetchDoctors();
       setDeleteTarget(null);
       setNotice('Data dokter berhasil dihapus.');
-    } catch (err) {
+    } catch {
       setSubmitError('Gagal menghapus data dokter.');
     } finally {
       setDeleteLoading(false);
@@ -193,7 +192,6 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
     setSubmitError('');
   };
 
-  // ---- handler jadwal ----
   const handleJadwalChange = (e) => {
     const { name, value } = e.target;
     setJadwalForm((prev) => ({ ...prev, [name]: value }));
@@ -251,7 +249,7 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
       await fetchSchedules();
       setDeleteJadwalTarget(null);
       setNotice('Jadwal berhasil dihapus.');
-    } catch (err) {
+    } catch {
       setJadwalSubmitError('Gagal menghapus jadwal.');
     }
   };
@@ -265,100 +263,126 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
   };
 
   const renderError = (field) =>
-    errors[field] ? <small className="form-error">{errors[field][0]}</small> : null;
+    errors[field] ? <small className="dk-form-error">{errors[field][0]}</small> : null;
 
   const renderJadwalError = (field) =>
-    jadwalErrors[field] ? <small className="form-error">{jadwalErrors[field][0] ?? jadwalErrors[field]}</small> : null;
+    jadwalErrors[field] ? <small className="dk-form-error">{jadwalErrors[field][0] ?? jadwalErrors[field]}</small> : null;
 
   const isAktif = (status) => status === 1 || status === true;
 
   return (
-    <AdminLayout title="Manajemen Dokter">
+    <AdminLayout title="">
 
-      {/* TAB */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '0.5px solid var(--color-border-tertiary)', paddingBottom: '0' }}>
+      {/* ── PAGE HEADER ── */}
+      <div className="dk-page-header">
+        <div>
+          <h1 className="dk-page-title">Manajemen Dokter</h1>
+          <p className="dk-page-sub">Kelola data dokter dan jadwal praktik klinik</p>
+        </div>
+      </div>
+
+      {/* ── NOTICE ── */}
+      {notice && (
+        <div className="dk-notice" onAnimationEnd={() => setTimeout(() => setNotice(''), 3000)}>
+          {notice}
+        </div>
+      )}
+
+      {/* ── TABS ── */}
+      <div className="dk-tabs">
         {[
-          { key: 'dokter', label: '👨‍⚕️ Data Dokter' },
-          { key: 'jadwal', label: '📅 Jadwal Kerja' },
+          { key: 'dokter', label: 'Data Dokter' },
+          { key: 'jadwal', label: 'Jadwal Kerja' },
         ].map(tab => (
           <button
             key={tab.key}
             type="button"
+            className={`dk-tab ${activeTab === tab.key ? 'dk-tab-active' : ''}`}
             onClick={() => setActiveTab(tab.key)}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderBottom: activeTab === tab.key ? '2px solid #185FA5' : '2px solid transparent',
-              background: 'transparent',
-              color: activeTab === tab.key ? '#185FA5' : 'var(--color-text-secondary)',
-              fontWeight: activeTab === tab.key ? 500 : 400,
-              fontSize: '14px',
-              cursor: 'pointer',
-              borderRadius: 0,
-            }}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {notice && <div className="dokter-card"><p className="dokter-subtitle">{notice}</p></div>}
-
       {/* ===== TAB DOKTER ===== */}
       {activeTab === 'dokter' && (
         <>
-          <div className="dokter-header">
-            <p className="dokter-subtitle">Total {doctors.length} dokter terdaftar</p>
-            <button className="btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setFormData(defaultForm); }}>
-              + Tambah Dokter
-            </button>
-          </div>
-
-          <div className="dokter-toolbar">
-            <label htmlFor="dokter-search">Cari</label>
-            <input
-              id="dokter-search" className="dokter-search-input" type="search"
-              placeholder="Cari nama atau spesialisasi…"
-              value={searchInput} onChange={(e) => setSearchInput(e.target.value)} autoComplete="off"
-            />
+          <div className="dk-toolbar">
+            <div className="dk-toolbar-left">
+              <input
+                id="dokter-search"
+                className="dk-search"
+                type="search"
+                placeholder="Cari nama atau spesialisasi..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="dk-toolbar-right">
+              <span className="dk-count">Total {doctors.length} dokter</span>
+              <button
+                className="dk-btn-primary"
+                onClick={() => { setShowForm(true); setEditingId(null); setFormData(defaultForm); }}
+              >
+                Tambah Dokter
+              </button>
+            </div>
           </div>
 
           {loading ? (
-            <p className="loading-text">Memuat data dokter...</p>
+            <div className="dk-loading">Memuat data dokter...</div>
           ) : (
-            <div className="dokter-card-table">
-              <table className="dokter-table">
+            <div className="dk-table-wrap">
+              <table className="dk-table">
                 <thead>
                   <tr>
-                    <th>Nama</th><th>Spesialisasi</th><th>No. telepon</th>
-                    <th>Jam praktek</th><th>Hari libur</th><th>Status</th><th>Aksi</th>
+                    <th>Nama</th>
+                    <th>Spesialisasi</th>
+                    <th>No. Telepon</th>
+                    <th>Jam Praktek</th>
+                    <th>Hari Libur</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {doctors.length === 0 ? (
-                    <tr><td colSpan="7"><div className="empty-state">Belum ada data dokter</div></td></tr>
+                    <tr>
+                      <td colSpan="7">
+                        <div className="dk-empty">Belum ada data dokter</div>
+                      </td>
+                    </tr>
                   ) : (
                     doctors.map((doc) => (
                       <tr key={doc.id}>
                         <td>
-                          <div className="nama-text">{doc.nama}</div>
-                          <div className="email-text">{doc.email}</div>
+                          <div className="dk-nama">{doc.nama}</div>
+                          <div className="dk-email">{doc.email}</div>
                         </td>
                         <td>{doc.spesialisasi}</td>
                         <td>{doc.no_telepon}</td>
-                        <td><span className="jam-text">{doc.jam_praktek_mulai} – {doc.jam_praktek_selesai}</span></td>
+                        <td>
+                          <span className="dk-jam">
+                            {doc.jam_praktek_mulai} – {doc.jam_praktek_selesai}
+                          </span>
+                        </td>
                         <td>{doc.hari_libur ?? '–'}</td>
                         <td>
                           <button
-                            className={isAktif(doc.status) ? 'badge-aktif badge-toggle' : 'badge-nonaktif badge-toggle'}
-                            onClick={() => toggleStatus(doc)} title="Klik untuk ubah status"
+                            className={isAktif(doc.status) ? 'dk-badge-aktif' : 'dk-badge-nonaktif'}
+                            onClick={() => toggleStatus(doc)}
+                            title="Klik untuk ubah status"
                           >
                             {isAktif(doc.status) ? 'Aktif' : 'Tidak aktif'}
                           </button>
                         </td>
                         <td>
-                          <button className="btn-small" onClick={() => editDoctor(doc)}>Edit</button>
-                          <button className="btn-danger" onClick={() => setDeleteTarget(doc)}>Hapus</button>
+                          <div className="dk-aksi">
+                            <button className="dk-btn-edit" onClick={() => editDoctor(doc)}>Edit</button>
+                            <button className="dk-btn-hapus" onClick={() => setDeleteTarget(doc)}>Hapus</button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -373,283 +397,312 @@ const groupedByDoctor = schedules.reduce((acc, sch) => {
       {/* ===== TAB JADWAL ===== */}
       {activeTab === 'jadwal' && (
         <>
-          <div className="dokter-header">
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <button
-            className={viewMode === 'hari' ? 'btn-primary' : 'btn-secondary'}
-            onClick={() => setViewMode('hari')}
-          >
-            Per Hari
-          </button>
-
-          <button
-            className={viewMode === 'dokter' ? 'btn-primary' : 'btn-secondary'}
-            onClick={() => setViewMode('dokter')}
-          >
-            Per Dokter
-          </button>
-        </div>
-            <p className="dokter-subtitle">Total {schedules.length} jadwal terdaftar</p>
-            <button className="btn-primary" onClick={() => { setShowJadwalForm(true); setEditingJadwalId(null); setJadwalForm(defaultJadwalForm); }}>
-              + Tambah Jadwal
-            </button>
+          <div className="dk-toolbar">
+            <div className="dk-toolbar-left">
+              <div className="dk-view-toggle">
+                <button
+                  className={`dk-view-btn ${viewMode === 'hari' ? 'dk-view-btn-active' : ''}`}
+                  onClick={() => setViewMode('hari')}
+                >
+                  Per Hari
+                </button>
+                <button
+                  className={`dk-view-btn ${viewMode === 'dokter' ? 'dk-view-btn-active' : ''}`}
+                  onClick={() => setViewMode('dokter')}
+                >
+                  Per Dokter
+                </button>
+              </div>
+            </div>
+            <div className="dk-toolbar-right">
+              <span className="dk-count">Total {schedules.length} jadwal</span>
+              <button
+                className="dk-btn-primary"
+                onClick={() => { setShowJadwalForm(true); setEditingJadwalId(null); setJadwalForm(defaultJadwalForm); }}
+              >
+                Tambah Jadwal
+              </button>
+            </div>
           </div>
 
           {jadwalLoading ? (
-            <p className="loading-text">Memuat jadwal...</p>
+            <div className="dk-loading">Memuat jadwal...</div>
           ) : (
-          <div className="jadwal-container">
+            <div className="dk-jadwal-grid">
 
-  {/* ================= PER HARI ================= */}
-  {viewMode === 'hari' && HARI_OPTIONS.map(day => {
-    const list = groupedByDay[day];
-    if (!list) return null;
+              {/* PER HARI */}
+              {viewMode === 'hari' && HARI_OPTIONS.map(day => {
+                const list = groupedByDay[day];
+                if (!list) return null;
+                return (
+                  <div key={day} className="dk-jadwal-card">
+                    <div className="dk-jadwal-card-header">
+                      <span className="dk-jadwal-day">{day}</span>
+                      <span className="dk-jadwal-count">{list.length} jadwal</span>
+                    </div>
+                    <div className="dk-jadwal-list">
+                      {list.map((sch) => (
+                        <div key={sch.id} className="dk-jadwal-item">
+                          <div className="dk-jadwal-info">
+                            <div className="dk-jadwal-nama">{sch.dokter?.nama ?? '–'}</div>
+                            <div className="dk-jadwal-meta">
+                              {sch.jam_mulai?.substring(0, 5)} – {sch.jam_selesai?.substring(0, 5)}
+                              <span className="dk-jadwal-sep">·</span>
+                              {/* Kapasitas {sch.kapasitas} */}
+                            </div>
+                          </div>
+                          <div className="dk-aksi">
+                            <button className="dk-btn-edit" onClick={() => editJadwal(sch)}>Edit</button>
+                            <button className="dk-btn-hapus" onClick={() => setDeleteJadwalTarget(sch)}>Hapus</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
 
-    return (
-      <div key={day} className="dokter-card" style={{ marginBottom: 16 }}>
-        <h4>📅 {day}</h4>
+              {/* PER DOKTER */}
+              {viewMode === 'dokter' && Object.keys(groupedByDoctor).map(doc => (
+                <div key={doc} className="dk-jadwal-card">
+                  <div className="dk-jadwal-card-header">
+                    <span className="dk-jadwal-day">{doc}</span>
+                    <span className="dk-jadwal-count">{groupedByDoctor[doc].length} jadwal</span>
+                  </div>
+                  <div className="dk-jadwal-list">
+                    {groupedByDoctor[doc].map((sch) => (
+                      <div key={sch.id} className="dk-jadwal-item">
+                        <div className="dk-jadwal-info">
+                          <div className="dk-jadwal-nama">{sch.hari}</div>
+                          <div className="dk-jadwal-meta">
+                            {sch.jam_mulai?.substring(0, 5)} – {sch.jam_selesai?.substring(0, 5)}
+                            <span className="dk-jadwal-sep">·</span>
+                            {/* Kapasitas {sch.kapasitas} */}
+                          </div>
+                        </div>
+                        <div className="dk-aksi">
+                          <button className="dk-btn-edit" onClick={() => editJadwal(sch)}>Edit</button>
+                          <button className="dk-btn-hapus" onClick={() => setDeleteJadwalTarget(sch)}>Hapus</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
-        {list.map((sch) => (
-          <div key={sch.id} style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '10px 0',
-            borderBottom: '1px solid #eee'
-          }}>
-            <div>
-              <b>{sch.dokter?.nama ?? '–'}</b>
-              <div>{sch.jam_mulai?.substring(0,5)} - {sch.jam_selesai?.substring(0,5)}</div>
-              <small>Kapasitas: {sch.kapasitas}</small>
             </div>
-
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button className="btn-small" onClick={() => editJadwal(sch)}>Edit</button>
-              <button className="btn-danger" onClick={() => setDeleteJadwalTarget(sch)}>Hapus</button>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  })}
-
-  {/* ================= PER DOKTER ================= */}
-  {viewMode === 'dokter' && Object.keys(groupedByDoctor).map(doc => (
-    <div key={doc} className="dokter-card" style={{ marginBottom: 16 }}>
-      <h4>👨‍⚕️ {doc}</h4>
-
-      {groupedByDoctor[doc].map((sch) => (
-        <div key={sch.id} style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          padding: '10px 0',
-          borderBottom: '1px solid #eee'
-        }}>
-          <div>
-            <b>{sch.hari}</b>
-            <div>{sch.jam_mulai?.substring(0,5)} - {sch.jam_selesai?.substring(0,5)}</div>
-            <small>Kapasitas: {sch.kapasitas}</small>
-          </div>
-
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn-small" onClick={() => editJadwal(sch)}>Edit</button>
-            <button className="btn-danger" onClick={() => setDeleteJadwalTarget(sch)}>Hapus</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  ))}
-
-</div>
           )}
         </>
       )}
 
-      {/* MODAL FORM DOKTER (tidak berubah) */}
-      <AdminCrudModal open={showForm} title={editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'} onClose={cancelForm}>
-        <div className="dokter-card">
-          <p className="form-title">{editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'}</p>
-          {submitError ? <p className="form-error">{submitError}</p> : null}
+      {/* ── MODAL FORM DOKTER ── */}
+      <AdminCrudModal
+        open={showForm}
+        title={editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'}
+        onClose={cancelForm}
+      >
+        <div className="dk-modal-body">
+          <div className="dk-modal-heading">
+            <p className="dk-modal-kategori">Data Dokter</p>
+            <h2 className="dk-modal-title">{editingId ? 'Edit Dokter' : 'Tambah Dokter Baru'}</h2>
+          </div>
+
+          {submitError && <div className="dk-alert-error">{submitError}</div>}
+
           <form onSubmit={handleSubmit}>
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">Nama lengkap</label>
+            <div className="dk-form-grid">
+              <div className="dk-form-group">
+                <label className="dk-form-label">Nama lengkap <span>*</span></label>
                 <input type="text" name="nama" value={formData.nama} onChange={handleChange} required maxLength={255} placeholder="dr. Budi Santoso" />
                 {renderError('nama')}
               </div>
-              <div className="form-group">
-                <label className="form-label">Spesialisasi</label>
+              <div className="dk-form-group">
+                <label className="dk-form-label">Spesialisasi <span>*</span></label>
                 <input type="text" name="spesialisasi" value={formData.spesialisasi} onChange={handleChange} required maxLength={100} placeholder="Umum / Gigi..." />
                 {renderError('spesialisasi')}
               </div>
-              <div className="form-group">
-                <label className="form-label">No. telepon</label>
+              <div className="dk-form-group">
+                <label className="dk-form-label">No. telepon <span>*</span></label>
                 <input type="text" name="no_telepon" value={formData.no_telepon} onChange={handleChange} required maxLength={20} placeholder="08xx..." />
                 {renderError('no_telepon')}
               </div>
-              <div className="form-group">
-                <label className="form-label">Hari libur</label>
+              <div className="dk-form-group">
+                <label className="dk-form-label">Hari libur</label>
                 <select name="hari_libur" value={formData.hari_libur} onChange={handleChange}>
-                  <option value="">-- Tidak ada --</option>
+                  <option value="">Tidak ada</option>
                   {HARI_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
                 </select>
                 {renderError('hari_libur')}
               </div>
-              <div className="form-group">
-                <label className="form-label">Status <span>*</span></label>
+              <div className="dk-form-group">
+                <label className="dk-form-label">Status <span>*</span></label>
                 <select name="status" value={formData.status} onChange={handleChange} required>
-                  <option value="">-- Pilih status --</option>
+                  <option value="">Pilih status</option>
                   <option value="1">Aktif</option>
                   <option value="0">Tidak aktif</option>
                 </select>
                 {renderError('status')}
               </div>
             </div>
+
             {!editingId && (
               <>
-                <hr className="form-divider" />
-                <p className="form-section-label">Informasi identitas & jadwal</p>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label className="form-label">No. identitas</label>
+                <hr className="dk-form-divider" />
+                <p className="dk-form-section-label">Informasi identitas & jadwal</p>
+                <div className="dk-form-grid">
+                  <div className="dk-form-group">
+                    <label className="dk-form-label">No. identitas <span>*</span></label>
                     <input type="text" name="no_identitas" value={formData.no_identitas} onChange={handleChange} required maxLength={50} />
                     {renderError('no_identitas')}
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">No. lisensi</label>
+                  <div className="dk-form-group">
+                    <label className="dk-form-label">No. lisensi <span>*</span></label>
                     <input type="text" name="no_lisensi" value={formData.no_lisensi} onChange={handleChange} required maxLength={50} />
                     {renderError('no_lisensi')}
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Email</label>
+                  <div className="dk-form-group">
+                    <label className="dk-form-label">Email <span>*</span></label>
                     <input type="email" name="email" value={formData.email} onChange={handleChange} required maxLength={255} />
                     {renderError('email')}
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Alamat</label>
+                  <div className="dk-form-group">
+                    <label className="dk-form-label">Alamat <span>*</span></label>
                     <input type="text" name="alamat" value={formData.alamat} onChange={handleChange} required maxLength={500} />
                     {renderError('alamat')}
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Jam praktek mulai</label>
+                  <div className="dk-form-group">
+                    <label className="dk-form-label">Jam praktek mulai <span>*</span></label>
                     <input type="time" name="jam_praktek_mulai" value={formData.jam_praktek_mulai} onChange={handleChange} required />
                     {renderError('jam_praktek_mulai')}
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Jam praktek selesai</label>
+                  <div className="dk-form-group">
+                    <label className="dk-form-label">Jam praktek selesai <span>*</span></label>
                     <input type="time" name="jam_praktek_selesai" value={formData.jam_praktek_selesai} onChange={handleChange} required />
                     {renderError('jam_praktek_selesai')}
                   </div>
                 </div>
               </>
             )}
-            <div className="form-actions">
-              <button type="submit" className="btn-primary" disabled={submitLoading}>
+
+            <div className="dk-form-actions">
+              <button type="submit" className="dk-btn-primary" disabled={submitLoading}>
                 {submitLoading ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
               </button>
-              <button type="button" className="btn-secondary" onClick={cancelForm}>Batal</button>
+              <button type="button" className="dk-btn-secondary" onClick={cancelForm}>Batal</button>
             </div>
           </form>
         </div>
       </AdminCrudModal>
 
-      {/* MODAL FORM JADWAL */}
-      <AdminCrudModal open={showJadwalForm} title={editingJadwalId ? 'Edit Jadwal' : 'Tambah Jadwal'} onClose={cancelJadwalForm}>
-        <div style={{ padding: '4px 0' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-tertiary)', margin: '0 0 4px' }}>Jadwal Kerja</p>
-            <h2 style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>{editingJadwalId ? 'Edit Jadwal' : 'Tambah Jadwal'}</h2>
+      {/* ── MODAL FORM JADWAL ── */}
+      <AdminCrudModal
+        open={showJadwalForm}
+        title={editingJadwalId ? 'Edit Jadwal' : 'Tambah Jadwal'}
+        onClose={cancelJadwalForm}
+      >
+        <div className="dk-modal-body">
+          <div className="dk-modal-heading">
+            <p className="dk-modal-kategori">Jadwal Kerja</p>
+            <h2 className="dk-modal-title">{editingJadwalId ? 'Edit Jadwal' : 'Tambah Jadwal'}</h2>
           </div>
-          {jadwalSubmitError && (
-            <p style={{ fontSize: '13px', color: 'var(--color-text-danger)', background: 'var(--color-background-danger)', padding: '10px 14px', borderRadius: 'var(--border-radius-md)', marginBottom: '16px' }}>
-              {jadwalSubmitError}
-            </p>
-          )}
+
+          {jadwalSubmitError && <div className="dk-alert-error">{jadwalSubmitError}</div>}
+
           <form onSubmit={handleJadwalSubmit}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
-                  Dokter <span style={{ color: 'var(--color-text-danger)' }}>*</span>
-                </label>
-                <select name="dokter_id" value={jadwalForm.dokter_id} onChange={handleJadwalChange} required
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: jadwalErrors.dokter_id ? '1px solid var(--color-border-danger)' : '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px' }}>
-                  <option value="">— Pilih dokter —</option>
-                  {doctors.map(d => <option key={d.id} value={d.id}>{d.nama}</option>)}
-                </select>
-                {renderJadwalError('dokter_id')}
+            <div className="dk-form-group" style={{ marginBottom: 16 }}>
+              <label className="dk-form-label">Dokter <span>*</span></label>
+              <select name="dokter_id" value={jadwalForm.dokter_id} onChange={handleJadwalChange} required>
+                <option value="">Pilih dokter</option>
+                {doctors.map(d => <option key={d.id} value={d.id}>{d.nama}</option>)}
+              </select>
+              {renderJadwalError('dokter_id')}
+            </div>
+
+            <div className="dk-form-group" style={{ marginBottom: 16 }}>
+              <label className="dk-form-label">Hari <span>*</span></label>
+              <div className="dk-hari-grid">
+                {HARI_OPTIONS.map(day => {
+                  const selected = jadwalForm.hari === day;
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      className={`dk-hari-btn ${selected ? 'dk-hari-btn-active' : ''}`}
+                      onClick={() => {
+                        setJadwalForm(f => ({ ...f, hari: day }));
+                        setJadwalErrors(p => ({ ...p, hari: null }));
+                      }}
+                    >
+                      {day.substring(0, 3)}
+                    </button>
+                  );
+                })}
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
-                  Hari <span style={{ color: 'var(--color-text-danger)' }}>*</span>
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-                  {HARI_OPTIONS.map(day => {
-                    const selected = jadwalForm.hari === day;
-                    return (
-                      <button key={day} type="button"
-                        onClick={() => { setJadwalForm(f => ({ ...f, hari: day })); setJadwalErrors(p => ({ ...p, hari: null })); }}
-                        style={{ textAlign: 'center', padding: '8px 4px', borderRadius: 'var(--border-radius-md)', border: selected ? '2px solid #185FA5' : '0.5px solid var(--color-border-secondary)', background: selected ? '#E6F1FB' : 'transparent', color: selected ? '#0C447C' : 'var(--color-text-secondary)', fontSize: '12px', fontWeight: selected ? 500 : 400, cursor: 'pointer' }}>
-                        {day.substring(0, 3)}
-                      </button>
-                    );
-                  })}
-                </div>
-                {renderJadwalError('hari')}
+              {renderJadwalError('hari')}
+            </div>
+
+            <div className="dk-form-grid" style={{ marginBottom: 16 }}>
+              <div className="dk-form-group">
+                <label className="dk-form-label">Jam mulai <span>*</span></label>
+                <input type="time" name="jam_mulai" value={jadwalForm.jam_mulai} onChange={handleJadwalChange} required />
+                {renderJadwalError('jam_mulai')}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>Jam mulai *</label>
-                  <input type="time" name="jam_mulai" value={jadwalForm.jam_mulai} onChange={handleJadwalChange} required
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px', boxSizing: 'border-box' }} />
-                  {renderJadwalError('jam_mulai')}
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>Jam selesai *</label>
-                  <input type="time" name="jam_selesai" value={jadwalForm.jam_selesai} onChange={handleJadwalChange} required
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)', fontSize: '14px', boxSizing: 'border-box' }} />
-                  {renderJadwalError('jam_selesai')}
-                </div>
+              <div className="dk-form-group">
+                <label className="dk-form-label">Jam selesai <span>*</span></label>
+                <input type="time" name="jam_selesai" value={jadwalForm.jam_selesai} onChange={handleJadwalChange} required />
+                {renderJadwalError('jam_selesai')}
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Kapasitas pasien</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <input type="range" min="1" max="50" name="kapasitas" value={jadwalForm.kapasitas} onChange={handleJadwalChange} style={{ flex: 1 }} />
-                  <div style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-secondary)', borderRadius: 'var(--border-radius-md)', padding: '6px 14px', fontSize: '14px', fontWeight: 500, minWidth: '42px', textAlign: 'center' }}>
-                    {jadwalForm.kapasitas}
-                  </div>
-                </div>
-              </div>
-              <div style={{ borderTop: '0.5px solid var(--color-border-tertiary)', paddingTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={cancelJadwalForm} disabled={jadwalSubmitLoading}
-                  style={{ padding: '9px 20px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-secondary)', background: 'transparent', color: 'var(--color-text-secondary)', fontSize: '14px', cursor: 'pointer' }}>
-                  Batal
-                </button>
-                <button type="submit" disabled={jadwalSubmitLoading}
-                  style={{ padding: '9px 20px', borderRadius: 'var(--border-radius-md)', border: 'none', background: jadwalSubmitLoading ? 'var(--color-background-secondary)' : '#185FA5', color: jadwalSubmitLoading ? 'var(--color-text-secondary)' : '#fff', fontSize: '14px', fontWeight: 500, cursor: jadwalSubmitLoading ? 'not-allowed' : 'pointer' }}>
-                  {jadwalSubmitLoading ? 'Menyimpan...' : editingJadwalId ? 'Update jadwal' : 'Simpan jadwal'}
-                </button>
-              </div>
+            </div>
+
+            <div className="dk-form-actions">
+              <button type="submit" className="dk-btn-primary" disabled={jadwalSubmitLoading}>
+                {jadwalSubmitLoading ? 'Menyimpan...' : editingJadwalId ? 'Update Jadwal' : 'Simpan Jadwal'}
+              </button>
+              <button type="button" className="dk-btn-secondary" onClick={cancelJadwalForm} disabled={jadwalSubmitLoading}>
+                Batal
+              </button>
             </div>
           </form>
         </div>
       </AdminCrudModal>
 
-      {/* MODAL HAPUS DOKTER */}
-      <AdminCrudModal open={Boolean(deleteTarget)} title="Konfirmasi Hapus Dokter" onClose={() => setDeleteTarget(null)} size="sm">
-        <p>Hapus data dokter <strong>{deleteTarget?.nama}</strong>?</p>
-        <div className="form-actions">
-          <button type="button" className="btn-danger" onClick={deleteDoctor} disabled={deleteLoading}>
-            {deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>Batal</button>
+      {/* ── MODAL HAPUS DOKTER ── */}
+      <AdminCrudModal
+        open={Boolean(deleteTarget)}
+        title="Hapus Dokter"
+        onClose={() => setDeleteTarget(null)}
+        size="sm"
+      >
+        <div className="dk-modal-body">
+          <p className="dk-confirm-text">
+            Hapus data dokter <strong>{deleteTarget?.nama}</strong>? Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <div className="dk-form-actions">
+            <button type="button" className="dk-btn-danger" onClick={deleteDoctor} disabled={deleteLoading}>
+              {deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
+            </button>
+            <button type="button" className="dk-btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>
+              Batal
+            </button>
+          </div>
         </div>
       </AdminCrudModal>
 
-      {/* MODAL HAPUS JADWAL */}
-      <AdminCrudModal open={Boolean(deleteJadwalTarget)} title="Konfirmasi Hapus Jadwal" onClose={() => setDeleteJadwalTarget(null)} size="sm">
-        <p>Hapus jadwal <strong>{deleteJadwalTarget?.dokter?.nama}</strong> hari <strong>{deleteJadwalTarget?.hari}</strong>?</p>
-        <div className="form-actions">
-          <button type="button" className="btn-danger" onClick={deleteJadwal}>Ya, Hapus</button>
-          <button type="button" className="btn-secondary" onClick={() => setDeleteJadwalTarget(null)}>Batal</button>
+      {/* ── MODAL HAPUS JADWAL ── */}
+      <AdminCrudModal
+        open={Boolean(deleteJadwalTarget)}
+        title="Hapus Jadwal"
+        onClose={() => setDeleteJadwalTarget(null)}
+        size="sm"
+      >
+        <div className="dk-modal-body">
+          <p className="dk-confirm-text">
+            Hapus jadwal <strong>{deleteJadwalTarget?.dokter?.nama}</strong> hari <strong>{deleteJadwalTarget?.hari}</strong>?
+          </p>
+          <div className="dk-form-actions">
+            <button type="button" className="dk-btn-danger" onClick={deleteJadwal}>Ya, Hapus</button>
+            <button type="button" className="dk-btn-secondary" onClick={() => setDeleteJadwalTarget(null)}>Batal</button>
+          </div>
         </div>
       </AdminCrudModal>
 
