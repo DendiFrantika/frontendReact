@@ -237,12 +237,7 @@ useEffect(() => {
 
   return (
     <AdminLayout title="">
-      <div className="dk-page-header">
-        <div>
-          <h1 className="dk-page-title">Manajemen Pasien</h1>
-          <p className="dk-page-sub">Kelola data pasien dan informasi medis</p>
-        </div>
-      </div>
+      <h1 className="dk-page-title">Manajemen Pasien</h1>
       <div className="container">
         <button className="btn-add" onClick={() => { setShowForm(true); resetForm(); }}>
           + Tambah Pasien
@@ -413,7 +408,6 @@ useEffect(() => {
           <td>
             <div className="nama-cell">
               <div className="nama">{p.nama}</div>
-              <div className="email">{p.email}</div>
             </div>
           </td>
 
